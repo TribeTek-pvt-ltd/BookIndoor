@@ -6,8 +6,8 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
-  --primary: #4f46e5; /* Indigo 600 */
-  --secondary: #6366f1; /* Indigo 500 */
+  --primary: #ffffff; /* Indigo 600 */
+  --secondary: #ffffff; /* Indigo 500 */
   --accent: #facc15; /* Amber 400 */
   --card-bg: #f9fafb;
   --card-shadow: 0 4px 12px rgba(0,0,0,0.08);
@@ -29,7 +29,7 @@
    Global Styles
    ======================= */
 body {
-  background-color: var(--background);
+  background-color: #ffffff;
   color: var(--foreground);
   font-family: var(--font-sans);
   line-height: 1.6;
@@ -100,12 +100,12 @@ button.secondary:hover {
    ======================= */
 h1, h2, h3, h4, h5, h6 {
   font-weight: 700;
-  color: var(--foreground);
+  color: #171717;
 }
 
-p {
+/* p {
   color: var(--foreground);
-}
+} */
 
 small {
   color: #0f398e; /* Tailwind gray-500 */
@@ -130,17 +130,18 @@ small {
    Forms & Inputs
    ======================= */
 input, select, textarea {
-  border: 1px solid #d1d5db; /* Tailwind gray-300 */
+  border: 1px solid #d1d5db; 
   border-radius: var(--border-radius);
   padding: 0.5rem;
   width: 100%;
   transition: border-color 0.3s;
+  color: #171717;
 }
-
+/* 
 input:focus, select:focus, textarea:focus {
   border-color: var(--primary);
   outline: none;
-}
+} */
 
 /* =======================
    Utility Classes
@@ -151,4 +152,8 @@ input:focus, select:focus, textarea:focus {
 
 .rounded-xl {
   border-radius: 1rem;
+}
+
+label {
+  color: #171717;
 }

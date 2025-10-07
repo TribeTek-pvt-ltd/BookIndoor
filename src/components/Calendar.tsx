@@ -1,13 +1,16 @@
 "use client";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 interface CalendarProps {
   bookedSlots?: string[]; // "YYYY-MM-DD HH:mm"
+  groundName: string; // Pass ground name dynamically
 }
 
 const daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
-export default function Calendar({ bookedSlots = [] }: CalendarProps) {
+export default function Calendar({ bookedSlots = [], groundName }: CalendarProps) {
+  const router = useRouter();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [selectedTimes, setSelectedTimes] = useState<string[]>([]);
@@ -23,8 +26,10 @@ export default function Calendar({ bookedSlots = [] }: CalendarProps) {
 
   const slots = generateSlots();
 
-  const prevMonth = () => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1));
-  const nextMonth = () => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1));
+  const prevMonth = () =>
+    setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1));
+  const nextMonth = () =>
+    setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1));
 
   const generateCalendar = () => {
     const year = currentDate.getFullYear();
@@ -53,11 +58,23 @@ export default function Calendar({ bookedSlots = [] }: CalendarProps) {
     const dd = day.toString().padStart(2, "0");
     setSelectedDate(`${yyyy}-${mm}-${dd}`);
     setSelectedTimes([]);
-    setShowTimePicker(true); // show time picker instead of calendar
+    setShowTimePicker(true);
   };
 
   const handleConfirm = () => {
-    setShowTimePicker(false); // go back to calendar
+    if (!selectedTimes.length) {
+      alert("Please select at least one time slot before confirming.");
+      return;
+    }
+
+    // Navigate to payment page with booking details as query params
+    const query = new URLSearchParams({
+      date: selectedDate!,
+      times: selectedTimes.join(","), // convert array to string
+      ground: groundName,
+    }).toString();
+
+    router.push(`/user/booking/payment?${query}`);
   };
 
   return (
@@ -69,17 +86,30 @@ export default function Calendar({ bookedSlots = [] }: CalendarProps) {
         <>
           {/* Month Navigation */}
           <div className="flex justify-between items-center mb-4">
-            <button onClick={prevMonth} className="px-3 py-1 rounded bg-indigo-100 hover:bg-indigo-200 text-gray-800 transition">Prev</button>
+            <button
+              onClick={prevMonth}
+              className="px-3 py-1 rounded bg-indigo-100 hover:bg-indigo-200 text-gray-800 transition"
+            >
+              Prev
+            </button>
             <span className="font-semibold text-gray-800 text-lg">
-              {currentDate.toLocaleString("default", { month: "long" })} {currentDate.getFullYear()}
+              {currentDate.toLocaleString("default", { month: "long" })}{" "}
+              {currentDate.getFullYear()}
             </span>
-            <button onClick={nextMonth} className="px-3 py-1 rounded bg-indigo-100 hover:bg-indigo-200 text-gray-800 transition">Next</button>
+            <button
+              onClick={nextMonth}
+              className="px-3 py-1 rounded bg-indigo-100 hover:bg-indigo-200 text-gray-800 transition"
+            >
+              Next
+            </button>
           </div>
 
           {/* Calendar Grid */}
           <div className="grid grid-cols-7 gap-2 text-center mb-6">
             {daysOfWeek.map((day) => (
-              <div key={day} className="font-semibold text-gray-600">{day}</div>
+              <div key={day} className="font-semibold text-gray-600">
+                {day}
+              </div>
             ))}
 
             {calendarDays.map((day, idx) =>
@@ -88,7 +118,8 @@ export default function Calendar({ bookedSlots = [] }: CalendarProps) {
                   key={idx}
                   onClick={() => handleDateClick(day)}
                   className={`px-4 py-2 rounded-lg transition ${
-                    selectedDate === `${currentDate.getFullYear()}-${(currentDate.getMonth() + 1)
+                    selectedDate ===
+                    `${currentDate.getFullYear()}-${(currentDate.getMonth() + 1)
                       .toString()
                       .padStart(2, "0")}-${day.toString().padStart(2, "0")}`
                       ? "bg-blue-500 text-white shadow-md scale-105"
@@ -106,45 +137,44 @@ export default function Calendar({ bookedSlots = [] }: CalendarProps) {
       )}
 
       {/* Time Picker */}
-{showTimePicker && selectedDate && (
-  <div className="bg-gray-50 rounded-lg p-4 shadow-md mb-6">
-    <h4 className="text-lg font-semibold text-gray-800 mb-2">
-      Select Time for {selectedDate}
-    </h4>
-    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-      {slots.map((slot) => {
-        const isBooked = bookedForDate.includes(`${selectedDate} ${slot}`);
-        const isSelected = selectedTimes.includes(slot);
-        return (
-          <button
-            key={slot}
-            onClick={() => !isBooked && toggleSlot(slot)}
-            disabled={isBooked}
-            className={`px-3 py-2 rounded-lg text-sm font-medium transition transform ${
-              isBooked
-                ? "bg-red-500 text-white cursor-not-allowed"
-                : isSelected
-                ? "bg-green-600 text-white shadow-md scale-105"
-                : "bg-white hover:bg-gray-200 text-gray-800"
-            }`}
-            title={isBooked ? "Already booked" : ""}
-          >
-            {slot}
-          </button>
-        );
-      })}
-    </div>
-    <div className="flex justify-end mt-4">
-      <button
-        onClick={handleConfirm}
-        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
-      >
-        OK
-      </button>
-    </div>
-  </div>
-)}
-
+      {showTimePicker && selectedDate && (
+        <div className="bg-gray-50 rounded-lg p-4 shadow-md mb-6">
+          <h4 className="text-lg font-semibold text-gray-800 mb-3">
+            Select Time for {selectedDate}
+          </h4>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+            {slots.map((slot) => {
+              const isBooked = bookedForDate.includes(`${selectedDate} ${slot}`);
+              const isSelected = selectedTimes.includes(slot);
+              return (
+                <button
+                  key={slot}
+                  onClick={() => !isBooked && toggleSlot(slot)}
+                  disabled={isBooked}
+                  className={`px-3 py-2 rounded-lg text-sm font-medium transition transform ${
+                    isBooked
+                      ? "bg-red-600 text-white cursor-not-allowed opacity-90"
+                      : isSelected
+                      ? "bg-green-600 text-white shadow-md scale-105"
+                      : "bg-white hover:bg-gray-200 text-gray-800"
+                  }`}
+                  title={isBooked ? "Already booked" : ""}
+                >
+                  {slot}
+                </button>
+              );
+            })}
+          </div>
+          <div className="flex justify-end mt-6">
+            <button
+              onClick={handleConfirm}
+              className="px-5 py-2.5 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition"
+            >
+              Confirm Booking
+            </button>
+          </div>
+        </div>
+      )}
 
       {selectedTimes.length > 0 && !showTimePicker && (
         <p className="mt-2 text-gray-800 font-medium">
@@ -154,4 +184,3 @@ export default function Calendar({ bookedSlots = [] }: CalendarProps) {
     </div>
   );
 }
-
