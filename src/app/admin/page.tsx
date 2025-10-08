@@ -1,9 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
 import GroundCard from "@/components/GroundCard";
-import AddGroundForm from "@/components/AddGroundForm"; // ✅ Ensure this path is correct
+import AddGroundForm from "@/components/AddGroundForm";
 
 interface Ground {
   id: number;
@@ -13,42 +12,70 @@ interface Ground {
   sports: string[];
 }
 
+interface Stats {
+  totalAdmins?: number;
+  totalGrounds: number;
+  totalRevenue: number;
+  activeBookings: number;
+}
+
 type TabType = "grounds" | "summary" | "details";
 
 export default function AdminPage() {
   const [grounds, setGrounds] = useState<Ground[]>([]);
-  const [role] = useState<"Admin" | "User">("Admin");
+  const [stats, setStats] = useState<Stats>({
+    totalAdmins: 0,
+    totalGrounds: 0,
+    totalRevenue: 0,
+    activeBookings: 0,
+  });
+  const [role, setRole] = useState<"Admin" | "SuperAdmin" | "User">("Admin");
   const [activeTab, setActiveTab] = useState<TabType>("grounds");
   const [showAddForm, setShowAddForm] = useState(false);
 
-  // Load stored grounds or fallback data
+  // ✅ Load role from localStorage
+  useEffect(() => {
+    const storedRole = localStorage.getItem("role") as
+      | "Admin"
+      | "SuperAdmin"
+      | "User"
+      | null;
+    if (storedRole) setRole(storedRole);
+  }, []);
+
+  // ✅ Load stored grounds (temporary mock)
   useEffect(() => {
     const stored = localStorage.getItem("grounds");
     if (stored) setGrounds(JSON.parse(stored));
-    else
-      setGrounds([
-        {
-          id: 1,
-          name: "Indoor Arena",
-          location: "Colombo",
-          image: "/arena1.jpg",
-          sports: ["Badminton", "Futsal", "Basketball"],
-        },
-        {
-          id: 2,
-          name: "City Sports Hall",
-          location: "Kandy",
-          image: "/arena2.jpg",
-          sports: ["Volleyball", "Badminton"],
-        },
-        {
-          id: 3,
-          name: "Beachside Courts",
-          location: "Galle",
-          image: "/arena3.jpg",
-          sports: ["Futsal", "Basketball"],
-        },
-      ]);
+  }, []);
+
+  // ✅ Fetch Stats from Backend
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const response = await fetch(`/api/stats`, {
+          headers: {
+            "Content-Type": "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+        });
+
+        if (!response.ok) throw new Error("Failed to fetch stats");
+
+        const data = await response.json();
+        setStats({
+          totalAdmins: data.totalAdmins || 0,
+          totalGrounds: data.totalGrounds || 0,
+          totalRevenue: data.totalRevenue || 0,
+          activeBookings: data.activeBookings || 0,
+        });
+      } catch (err) {
+        console.error("❌ Error fetching stats:", err);
+      }
+    };
+
+    fetchStats();
   }, []);
 
   return (
@@ -61,8 +88,7 @@ export default function AdminPage() {
           {role === "Admin" && activeTab === "grounds" && (
             <button
               onClick={() => setShowAddForm(true)}
-              className="px-5 py-2 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition-all shadow-md w-full sm:w-auto"
-            >
+              className="px-5 py-2 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition-all shadow-md w-full sm:w-auto">
               + Add New Ground
             </button>
           )}
@@ -78,8 +104,7 @@ export default function AdminPage() {
                 activeTab === tab.key
                   ? "text-green-600 border-b-2 border-green-600"
                   : "text-gray-500 hover:text-green-500"
-              }`}
-            >
+              }`}>
               {tab.label}
             </button>
           ))}
@@ -89,26 +114,33 @@ export default function AdminPage() {
         <div className="min-h-[600px] transition-all duration-300">
           {activeTab === "grounds" && (
             <>
-              {/* Summary */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-12">
+              {/* ✅ Dynamic Summary */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-4 gap-6 mb-12">
+                {role === "SuperAdmin" && (
+                  <SummaryCard
+                    title="Total Admins"
+                    value={stats.totalAdmins ?? 0}
+                    color="indigo"
+                  />
+                )}
                 <SummaryCard
                   title="Total Grounds"
-                  value={grounds.length}
+                  value={stats.totalGrounds}
                   color="green"
                 />
                 <SummaryCard
                   title="Active Bookings"
-                  value="12"
-                  color="indigo"
+                  value={stats.activeBookings}
+                  color="yellow"
                 />
                 <SummaryCard
                   title="Total Revenue"
-                  value="$2,450"
-                  color="yellow"
+                  value={`Rs. ${stats.totalRevenue.toLocaleString()}`}
+                  color="blue"
                 />
               </div>
 
-              {/* Grounds */}
+              {/* Grounds List */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10 justify-items-center">
                 {grounds.length > 0 ? (
                   grounds.map((ground) => (
@@ -131,8 +163,7 @@ export default function AdminPage() {
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-y-auto max-h-[90vh] relative animate-fadeIn">
             <button
               onClick={() => setShowAddForm(false)}
-              className="absolute top-3 right-3 text-gray-600 hover:text-red-600 text-2xl"
-            >
+              className="absolute top-3 right-3 text-gray-600 hover:text-red-600 text-2xl">
               ✕
             </button>
 
@@ -147,7 +178,7 @@ export default function AdminPage() {
   );
 }
 
-// Summary Card Component
+// ✅ Summary Card Component
 function SummaryCard({
   title,
   value,
@@ -155,18 +186,18 @@ function SummaryCard({
 }: {
   title: string;
   value: string | number;
-  color: "green" | "indigo" | "yellow";
+  color: "green" | "indigo" | "yellow" | "blue";
 }) {
   const colors = {
     green: "border-l-4 border-green-500",
     indigo: "border-l-4 border-indigo-500",
     yellow: "border-l-4 border-yellow-500",
+    blue: "border-l-4 border-blue-500",
   };
 
   return (
     <div
-      className={`bg-white p-6 rounded-xl shadow-md w-full ${colors[color]}`}
-    >
+      className={`bg-white p-6 rounded-xl shadow-md w-full ${colors[color]}`}>
       <h3 className="text-lg font-semibold text-gray-700">{title}</h3>
       <p className="text-3xl font-bold text-gray-800 mt-2">{value}</p>
     </div>

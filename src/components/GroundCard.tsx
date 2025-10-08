@@ -11,7 +11,7 @@ export interface Ground {
 
 interface GroundCardProps {
   ground: Ground;
-  role?: "Admin" | "User";
+  role?: "Admin" | "User" | "SuperAdmin";
 }
 
 export default function GroundCard({ ground, role = "User" }: GroundCardProps) {
@@ -30,7 +30,9 @@ export default function GroundCard({ ground, role = "User" }: GroundCardProps) {
           className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
         />
         <div className="absolute bottom-0 left-0 w-full bg-gradient-to-t from-black/60 to-transparent p-4">
-          <h3 className="text-white text-lg font-bold truncate">{ground.name}</h3>
+          <h3 className="text-white text-lg font-bold truncate">
+            {ground.name}
+          </h3>
           <p className="text-green-900 text-sm flex items-center gap-1">
             📍 {ground.location}
           </p>
@@ -45,8 +47,7 @@ export default function GroundCard({ ground, role = "User" }: GroundCardProps) {
             {ground.sports.map((sport) => (
               <span
                 key={sport}
-                className="text-xs bg-green-800/30 text-green-800 px-3 py-1 rounded-full font-medium backdrop-blur-sm"
-              >
+                className="text-xs bg-green-800/30 text-green-800 px-3 py-1 rounded-full font-medium backdrop-blur-sm">
                 {sport}
               </span>
             ))}
@@ -54,30 +55,27 @@ export default function GroundCard({ ground, role = "User" }: GroundCardProps) {
         )}
 
         {/* Facilities (Optional) */}
-{Array.isArray(ground.facilities) && ground.facilities.length > 0 && (
-  <div className="flex flex-wrap justify-center gap-2 mt-2">
-    {ground.facilities.map((facility) => (
-      <span
-        key={facility}
-        className="text-xs bg-green-600/40 text-white px-2 py-1 rounded-full flex items-center gap-1 font-medium backdrop-blur-sm"
-      >
-        {/* Example icons for some facilities */}
-        {facility === "Wi-Fi" && "📶"}
-        {facility === "Parking" && "🅿️"}
-        {facility === "Cafeteria" && "☕"}
-        {facility === "Locker Room" && "🧳"}
-        {facility}
-      </span>
-    ))}
-  </div>
-)}
-
+        {Array.isArray(ground.facilities) && ground.facilities.length > 0 && (
+          <div className="flex flex-wrap justify-center gap-2 mt-2">
+            {ground.facilities.map((facility) => (
+              <span
+                key={facility}
+                className="text-xs bg-green-600/40 text-white px-2 py-1 rounded-full flex items-center gap-1 font-medium backdrop-blur-sm">
+                {/* Example icons for some facilities */}
+                {facility === "Wi-Fi" && "📶"}
+                {facility === "Parking" && "🅿️"}
+                {facility === "Cafeteria" && "☕"}
+                {facility === "Locker Room" && "🧳"}
+                {facility}
+              </span>
+            ))}
+          </div>
+        )}
 
         {/* Button */}
         <Link
           href={link}
-          className="block w-full text-center px-5 py-2 bg-green-800 text-white font-semibold rounded-lg hover:bg-green-700 transition-all shadow-md"
-        >
+          className="block w-full text-center px-5 py-2 bg-green-800 text-white font-semibold rounded-lg hover:bg-green-700 transition-all shadow-md">
           View Details
         </Link>
       </div>
