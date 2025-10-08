@@ -101,9 +101,16 @@ export default function AddGroundForm() {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSportChange = (index: number, field: keyof Sport, value: string) => {
+  const handleSportChange = (
+    index: number,
+    field: keyof Sport,
+    value: string
+  ) => {
     const updated = [...formData.sports];
-    updated[index] = { ...updated[index], [field]: field === "price" ? Number(value) : value };
+    updated[index] = {
+      ...updated[index],
+      [field]: field === "price" ? Number(value) : value,
+    };
     setFormData((prev) => ({ ...prev, sports: updated }));
   };
 
@@ -128,7 +135,9 @@ export default function AddGroundForm() {
   const availableSports = (currentSport: string) =>
     defaultSports.filter(
       (sport) =>
-        !formData.sports.some((s) => s.sport === sport && s.sport !== currentSport)
+        !formData.sports.some(
+          (s) => s.sport === sport && s.sport !== currentSport
+        )
     );
 
   const handleFacilityChange = (facility: string) => {
@@ -173,45 +182,62 @@ export default function AddGroundForm() {
   };
 
   // Submit form
-  const handleSubmit = (e: FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
 
-    const newGround = {
-      id: mode === "edit" && id ? Number(id) : Date.now(),
+    const token = localStorage.getItem("token");
+    const selectedOwnerId = localStorage.getItem("id");
+    if (!token) return alert("You are not logged in!");
+
+    const payload = {
+      token, // or remove if using Authorization header
+      ownerId: selectedOwnerId, // only if admin creating ground
       name: formData.ground_name,
-      location: formData.location,
-      latitude: formData.latitude,
-      longitude: formData.longitude,
-      open_from: formData.open_from,
-      open_to: formData.open_to,
-      image: previewImages[0] || "/default-ground.jpg",
-      sports: formData.sports.map((s) => s.sport),
-      priceList: formData.sports.map((s) => s.price),
-      phone_no: formData.phone_no,
-      court_type: formData.court_type,
-      facilities: formData.facilities.join(", "),
+      location: {
+        address: formData.location,
+        lat: Number(formData.latitude),
+        lng: Number(formData.longitude),
+      },
+      contactNumber: formData.phone_no,
+      groundType: formData.court_type,
+      sports: formData.sports.map((s) => ({
+        name: s.sport,
+        pricePerHour: s.price,
+      })),
+      availableTime: { from: formData.open_from, to: formData.open_to },
+      amenities: formData.facilities,
       images: previewImages,
+      description: "",
     };
 
-    const stored = JSON.parse(localStorage.getItem("grounds") || "[]");
-    if (mode === "edit" && id) {
-      const updated = stored.map((g: any) => (String(g.id) === id ? newGround : g));
-      localStorage.setItem("grounds", JSON.stringify(updated));
-      alert("✅ Ground updated successfully!");
-    } else {
-      stored.push(newGround);
-      localStorage.setItem("grounds", JSON.stringify(stored));
-      alert("✅ Ground added successfully!");
-    }
+    try {
+      const res = await fetch("/api/grounds/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(payload),
+      });
 
-    setIsSubmitting(false);
-    router.push("/admin");
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to create ground");
+
+      alert("✅ Ground saved successfully!");
+      router.push("/admin");
+    } catch (err: any) {
+      alert("❌ " + err.message);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleDelete = () => {
     if (!id) return;
-    const confirmDelete = confirm("Are you sure you want to delete this ground?");
+    const confirmDelete = confirm(
+      "Are you sure you want to delete this ground?"
+    );
     if (!confirmDelete) return;
 
     const stored = JSON.parse(localStorage.getItem("grounds") || "[]");
@@ -231,8 +257,7 @@ export default function AddGroundForm() {
           <button
             onClick={handleDelete}
             type="button"
-            className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition"
-          >
+            className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition">
             Delete
           </button>
         )}
@@ -282,8 +307,7 @@ export default function AddGroundForm() {
             <button
               type="button"
               onClick={useMyLocation}
-              className="bg-green-700 text-white px-3 py-2 rounded-lg hover:bg-green-800 transition mt-2 sm:mt-0"
-            >
+              className="bg-green-700 text-white px-3 py-2 rounded-lg hover:bg-green-800 transition mt-2 sm:mt-0">
               Use My Location
             </button>
           </div>
@@ -293,16 +317,36 @@ export default function AddGroundForm() {
         <div>
           <label className="font-semibold text-green-900">Open Time</label>
           <div className="flex flex-col sm:flex-row gap-3 mt-2">
-            <input type="time" name="open_from" value={formData.open_from} onChange={handleChange} className="input" />
-            <input type="time" name="open_to" value={formData.open_to} onChange={handleChange} className="input" />
+            <input
+              type="time"
+              name="open_from"
+              value={formData.open_from}
+              onChange={handleChange}
+              className="input"
+            />
+            <input
+              type="time"
+              name="open_to"
+              value={formData.open_to}
+              onChange={handleChange}
+              className="input"
+            />
           </div>
           {formData.open_from && formData.open_to && (
             <p className="text-green-800 mt-2 text-sm">
               Open Time:{" "}
               <span className="font-semibold">
-                {new Date(`2000-01-01T${formData.open_from}`).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}{" "}
+                {new Date(
+                  `2000-01-01T${formData.open_from}`
+                ).toLocaleTimeString([], {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}{" "}
                 –{" "}
-                {new Date(`2000-01-01T${formData.open_to}`).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                {new Date(`2000-01-01T${formData.open_to}`).toLocaleTimeString(
+                  [],
+                  { hour: "2-digit", minute: "2-digit" }
+                )}
               </span>
             </p>
           )}
@@ -311,49 +355,84 @@ export default function AddGroundForm() {
         {/* Court Type */}
         <div>
           <label className="font-semibold text-green-900">Court Type</label>
-          <select name="court_type" value={formData.court_type} onChange={handleChange} className="input mt-2" required>
+          <select
+            name="court_type"
+            value={formData.court_type}
+            onChange={handleChange}
+            className="input mt-2"
+            required>
             <option value="">Select Court Type</option>
             {courtTypes.map((type) => (
-              <option key={type} value={type}>{type}</option>
+              <option key={type} value={type}>
+                {type}
+              </option>
             ))}
           </select>
         </div>
 
         {/* Sports */}
         <div className="space-y-3">
-          <h3 className="font-semibold text-green-900 text-lg">Sports & Prices</h3>
+          <h3 className="font-semibold text-green-900 text-lg">
+            Sports & Prices
+          </h3>
           {formData.sports.map((sport, index) => (
-            <div key={index} className="flex flex-col sm:flex-row gap-3 items-center">
+            <div
+              key={index}
+              className="flex flex-col sm:flex-row gap-3 items-center">
               <select
                 value={sport.sport}
-                onChange={(e) => handleSportChange(index, "sport", e.target.value)}
-                className="input flex-1"
-              >
+                onChange={(e) =>
+                  handleSportChange(index, "sport", e.target.value)
+                }
+                className="input flex-1">
                 <option value="">Select Sport</option>
                 {availableSports(sport.sport).map((s) => (
-                  <option key={s} value={s}>{s}</option>
+                  <option key={s} value={s}>
+                    {s}
+                  </option>
                 ))}
               </select>
               <input
                 type="number"
                 placeholder="Price"
                 value={sport.price}
-                onChange={(e) => handleSportChange(index, "price", e.target.value)}
+                onChange={(e) =>
+                  handleSportChange(index, "price", e.target.value)
+                }
                 className="input flex-1"
               />
-              <button type="button" onClick={() => removeSport(index)} className="text-red-600 font-bold text-lg">✕</button>
+              <button
+                type="button"
+                onClick={() => removeSport(index)}
+                className="text-red-600 font-bold text-lg">
+                ✕
+              </button>
             </div>
           ))}
-          <button type="button" onClick={addSport} className="text-green-700 font-semibold hover:underline">+ Add Sport</button>
+          <button
+            type="button"
+            onClick={addSport}
+            className="text-green-700 font-semibold hover:underline">
+            + Add Sport
+          </button>
         </div>
 
         {/* Facilities */}
         <div>
-          <h3 className="font-semibold text-green-900 text-lg mb-2">Facilities</h3>
+          <h3 className="font-semibold text-green-900 text-lg mb-2">
+            Facilities
+          </h3>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
             {defaultFacilities.map((facility) => (
-              <label key={facility} className="flex items-center gap-2 px-3 py-2 hover:bg-green-100 transition">
-                <input type="checkbox" checked={formData.facilities.includes(facility)} onChange={() => handleFacilityChange(facility)} className="accent-green-700" />
+              <label
+                key={facility}
+                className="flex items-center gap-2 px-3 py-2 hover:bg-green-100 transition">
+                <input
+                  type="checkbox"
+                  checked={formData.facilities.includes(facility)}
+                  onChange={() => handleFacilityChange(facility)}
+                  className="accent-green-700"
+                />
                 <span className="text-green-900 text-sm">{facility}</span>
               </label>
             ))}
@@ -361,17 +440,38 @@ export default function AddGroundForm() {
         </div>
 
         {/* Phone */}
-        <input type="text" name="phone_no" value={formData.phone_no} onChange={handleChange} placeholder="Phone Number" className="input" />
+        <input
+          type="text"
+          name="phone_no"
+          value={formData.phone_no}
+          onChange={handleChange}
+          placeholder="Phone Number"
+          className="input"
+        />
 
         {/* Images */}
         <div>
           <label className="font-semibold text-green-900">Upload Images</label>
-          <input type="file" accept="image/*" multiple onChange={handleImageChange} className="block mt-2" />
+          <input
+            type="file"
+            accept="image/*"
+            multiple
+            onChange={handleImageChange}
+            className="block mt-2"
+          />
           <div className="flex flex-wrap gap-3 mt-3">
             {previewImages.map((src, index) => (
               <div key={index} className="relative">
-                <img src={src} className="w-24 h-24 object-cover rounded-lg border border-green-400" />
-                <button type="button" onClick={() => removeImage(index)} className="absolute top-0 right-0 bg-red-600 text-white text-xs px-2 py-1 rounded-bl-lg">✕</button>
+                <img
+                  src={src}
+                  className="w-24 h-24 object-cover rounded-lg border border-green-400"
+                />
+                <button
+                  type="button"
+                  onClick={() => removeImage(index)}
+                  className="absolute top-0 right-0 bg-red-600 text-white text-xs px-2 py-1 rounded-bl-lg">
+                  ✕
+                </button>
               </div>
             ))}
           </div>
@@ -381,9 +481,16 @@ export default function AddGroundForm() {
         <button
           type="submit"
           disabled={isSubmitting}
-          className={`w-full py-3 font-semibold rounded-lg text-white transition ${isSubmitting ? "bg-gray-400" : "bg-green-700 hover:bg-green-800"}`}
-        >
-          {isSubmitting ? (mode === "edit" ? "Updating..." : "Adding...") : (mode === "edit" ? "Update Ground" : "Add Ground")}
+          className={`w-full py-3 font-semibold rounded-lg text-white transition ${
+            isSubmitting ? "bg-gray-400" : "bg-green-700 hover:bg-green-800"
+          }`}>
+          {isSubmitting
+            ? mode === "edit"
+              ? "Updating..."
+              : "Adding..."
+            : mode === "edit"
+            ? "Update Ground"
+            : "Add Ground"}
         </button>
       </form>
     </div>

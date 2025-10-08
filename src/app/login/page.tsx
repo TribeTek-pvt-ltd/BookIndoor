@@ -33,7 +33,8 @@ export default function LoginPage() {
 
       // ✅ Save token and user info (localStorage or cookies)
       localStorage.setItem("token", data.token);
-      localStorage.setItem("user", JSON.stringify(data.user.role));
+      localStorage.setItem("user", data.user.role);
+      localStorage.setItem("id", data.user._id);
 
       // Redirect based on role
       if (data.user.role === "admin") {
@@ -94,8 +95,7 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-3 bg-green-700 text-white rounded-xl font-semibold hover:bg-green-800 transition shadow-md"
-          >
+            className="w-full py-3 bg-green-700 text-white rounded-xl font-semibold hover:bg-green-800 transition shadow-md">
             {loading ? "Logging in..." : "Login"}
           </button>
         </form>
@@ -105,8 +105,7 @@ export default function LoginPage() {
             Don't have an account?{" "}
             <a
               href="/signup"
-              className="text-green-700 font-medium hover:underline"
-            >
+              className="text-green-700 font-medium hover:underline">
               Sign Up
             </a>
           </p>

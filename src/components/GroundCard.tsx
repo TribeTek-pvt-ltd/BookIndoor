@@ -10,6 +10,7 @@ export interface Ground {
 }
 
 interface GroundCardProps {
+  id: number;
   ground: Ground;
   role?: "Admin" | "User" | "SuperAdmin";
 }

@@ -72,13 +72,14 @@ export async function POST(req: Request) {
 export async function GET(req: Request) {
   try {
     await dbConnect();
-    const url = new URL(req.url);
-    const token = url.searchParams.get("token");
+
+    const authHeader = req.headers.get("Authorization");
+    const token = authHeader?.split(" ")[1]; // Bearer token
 
     const decoded = token ? verifyToken(token) : null;
 
     let grounds;
-    if (decoded && ["admin", "super_admin"].includes(decoded.role)) {
+    if (decoded && decoded.role === "super_admin") {
       grounds = await Ground.find().populate("owner", "name email role");
     } else if (decoded && decoded.role === "admin") {
       grounds = await Ground.find({ owner: decoded.id }).populate(

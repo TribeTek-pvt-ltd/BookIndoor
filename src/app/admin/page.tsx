@@ -1,16 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import GroundCard from "@/components/GroundCard";
+import GroundCard, { Ground } from "@/components/GroundCard";
 import AddGroundForm from "@/components/AddGroundForm";
-
-interface Ground {
-  id: number;
-  name: string;
-  location: string;
-  image: string;
-  sports: string[];
-}
 
 interface Stats {
   totalAdmins?: number;
@@ -33,7 +25,7 @@ export default function AdminPage() {
   const [activeTab, setActiveTab] = useState<TabType>("grounds");
   const [showAddForm, setShowAddForm] = useState(false);
 
-  // ✅ Load role from localStorage
+  // Load role from localStorage
   useEffect(() => {
     const storedRole = localStorage.getItem("role") as
       | "Admin"
@@ -43,13 +35,7 @@ export default function AdminPage() {
     if (storedRole) setRole(storedRole);
   }, []);
 
-  // ✅ Load stored grounds (temporary mock)
-  useEffect(() => {
-    const stored = localStorage.getItem("grounds");
-    if (stored) setGrounds(JSON.parse(stored));
-  }, []);
-
-  // ✅ Fetch Stats from Backend
+  // Fetch Stats from Backend
   useEffect(() => {
     const fetchStats = async () => {
       try {
@@ -76,6 +62,45 @@ export default function AdminPage() {
     };
 
     fetchStats();
+  }, []);
+
+  // Fetch Grounds from Backend
+  useEffect(() => {
+    const fetchGrounds = async () => {
+      try {
+        const token = localStorage.getItem("token");
+
+        // Call the backend API with token
+        const response = await fetch("/api/grounds", {
+          headers: {
+            "Content-Type": "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+        });
+
+        if (!response.ok) throw new Error("Failed to fetch grounds");
+
+        const data = await response.json();
+
+        // Normalize backend response to match Ground interface
+        const mappedGrounds: Ground[] = data.map((g: any) => ({
+          id: g._id, // _id → id
+          name: g.name,
+          location:
+            typeof g.location === "string"
+              ? g.location
+              : g.location?.address || "Unknown",
+          image: g.images?.[0] || "/placeholder.png",
+          sports: g.sports?.map((s: any) => s.name) || [],
+        }));
+
+        setGrounds(mappedGrounds);
+      } catch (err) {
+        console.error("❌ Error fetching grounds:", err);
+      }
+    };
+
+    fetchGrounds();
   }, []);
 
   return (
@@ -114,37 +139,16 @@ export default function AdminPage() {
         <div className="min-h-[600px] transition-all duration-300">
           {activeTab === "grounds" && (
             <>
-              {/* ✅ Dynamic Summary */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-4 gap-6 mb-12">
-                {role === "SuperAdmin" && (
-                  <SummaryCard
-                    title="Total Admins"
-                    value={stats.totalAdmins ?? 0}
-                    color="indigo"
-                  />
-                )}
-                <SummaryCard
-                  title="Total Grounds"
-                  value={stats.totalGrounds}
-                  color="green"
-                />
-                <SummaryCard
-                  title="Active Bookings"
-                  value={stats.activeBookings}
-                  color="yellow"
-                />
-                <SummaryCard
-                  title="Total Revenue"
-                  value={`Rs. ${stats.totalRevenue.toLocaleString()}`}
-                  color="blue"
-                />
-              </div>
-
               {/* Grounds List */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10 justify-items-center">
                 {grounds.length > 0 ? (
                   grounds.map((ground) => (
-                    <GroundCard key={ground.id} ground={ground} role={role} />
+                    <GroundCard
+                      key={ground.id}
+                      ground={ground}
+                      role={role}
+                      id={0}
+                    />
                   ))
                 ) : (
                   <p className="col-span-full text-gray-500 text-center">
@@ -157,7 +161,7 @@ export default function AdminPage() {
         </div>
       </div>
 
-      {/* ✅ Add Ground Modal */}
+      {/* Add Ground Modal */}
       {showAddForm && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-y-auto max-h-[90vh] relative animate-fadeIn">
@@ -168,38 +172,11 @@ export default function AdminPage() {
             </button>
 
             <div className="p-6">
-              
               <AddGroundForm />
             </div>
           </div>
         </div>
       )}
-    </div>
-  );
-}
-
-// ✅ Summary Card Component
-function SummaryCard({
-  title,
-  value,
-  color,
-}: {
-  title: string;
-  value: string | number;
-  color: "green" | "indigo" | "yellow" | "blue";
-}) {
-  const colors = {
-    green: "border-l-4 border-green-500",
-    indigo: "border-l-4 border-indigo-500",
-    yellow: "border-l-4 border-yellow-500",
-    blue: "border-l-4 border-blue-500",
-  };
-
-  return (
-    <div
-      className={`bg-white p-6 rounded-xl shadow-md w-full ${colors[color]}`}>
-      <h3 className="text-lg font-semibold text-gray-700">{title}</h3>
-      <p className="text-3xl font-bold text-gray-800 mt-2">{value}</p>
     </div>
   );
 }
