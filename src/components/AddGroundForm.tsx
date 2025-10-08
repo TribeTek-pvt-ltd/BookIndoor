@@ -66,7 +66,7 @@ export default function AddGroundForm() {
   const [previewImages, setPreviewImages] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // ✅ Load existing ground (edit mode)
+  // Load existing ground in edit mode
   useEffect(() => {
     if (mode === "edit" && id) {
       const stored = JSON.parse(localStorage.getItem("grounds") || "[]");
@@ -93,8 +93,10 @@ export default function AddGroundForm() {
     }
   }, [mode, id]);
 
-  // ✅ Input handlers
-  const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  // Input handler
+  const handleChange = (
+    e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+  ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
@@ -105,7 +107,6 @@ export default function AddGroundForm() {
     setFormData((prev) => ({ ...prev, sports: updated }));
   };
 
-  // ✅ Prevent adding duplicate sports
   const addSport = () => {
     const selectedSports = formData.sports.map((s) => s.sport).filter(Boolean);
     if (selectedSports.length === defaultSports.length) {
@@ -124,7 +125,6 @@ export default function AddGroundForm() {
       sports: prev.sports.filter((_, i) => i !== index),
     }));
 
-  // ✅ Filter sport options (no duplicates)
   const availableSports = (currentSport: string) =>
     defaultSports.filter(
       (sport) =>
@@ -140,7 +140,7 @@ export default function AddGroundForm() {
     });
   };
 
-  // ✅ Image uploads
+  // Image upload
   const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files) return;
     const files = Array.from(e.target.files);
@@ -157,7 +157,22 @@ export default function AddGroundForm() {
     setPreviewImages((prev) => prev.filter((_, i) => i !== index));
   };
 
-  // ✅ Submit form
+  // Use browser location
+  const useMyLocation = () => {
+    if (!navigator.geolocation) return alert("Geolocation is not supported!");
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setFormData((prev) => ({
+          ...prev,
+          latitude: String(position.coords.latitude),
+          longitude: String(position.coords.longitude),
+        }));
+      },
+      () => alert("Unable to fetch location!")
+    );
+  };
+
+  // Submit form
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -207,12 +222,11 @@ export default function AddGroundForm() {
   };
 
   return (
-    <div className="max-w-2xl mx-auto mt-6 bg-white  p-6 ">
+    <div className="max-w-2xl mx-auto mt-6 bg-white p-6 rounded-xl shadow-md">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-green-900">
           {mode === "edit" ? "Edit Ground" : "Add New Ground"}
         </h1>
-
         {mode === "edit" && (
           <button
             onClick={handleDelete}
@@ -226,8 +240,54 @@ export default function AddGroundForm() {
 
       <form onSubmit={handleSubmit} className="space-y-5">
         {/* Ground Name & Location */}
-        <input type="text" name="ground_name" value={formData.ground_name} onChange={handleChange} placeholder="Ground Name" className="input" required />
-        <input type="text" name="location" value={formData.location} onChange={handleChange} placeholder="Location" className="input" required />
+        <input
+          type="text"
+          name="ground_name"
+          value={formData.ground_name}
+          onChange={handleChange}
+          placeholder="Ground Name"
+          className="input"
+          required
+        />
+        <input
+          type="text"
+          name="location"
+          value={formData.location}
+          onChange={handleChange}
+          placeholder="Location"
+          className="input"
+          required
+        />
+
+        {/* Latitude & Longitude */}
+        <div>
+          <label className="font-semibold text-green-900">Coordinates</label>
+          <div className="flex flex-col sm:flex-row gap-3 mt-2">
+            <input
+              type="text"
+              name="latitude"
+              value={formData.latitude}
+              onChange={handleChange}
+              placeholder="Latitude"
+              className="input flex-1"
+            />
+            <input
+              type="text"
+              name="longitude"
+              value={formData.longitude}
+              onChange={handleChange}
+              placeholder="Longitude"
+              className="input flex-1"
+            />
+            <button
+              type="button"
+              onClick={useMyLocation}
+              className="bg-green-700 text-white px-3 py-2 rounded-lg hover:bg-green-800 transition mt-2 sm:mt-0"
+            >
+              Use My Location
+            </button>
+          </div>
+        </div>
 
         {/* Open Time */}
         <div>
@@ -240,15 +300,9 @@ export default function AddGroundForm() {
             <p className="text-green-800 mt-2 text-sm">
               Open Time:{" "}
               <span className="font-semibold">
-                {new Date(`2000-01-01T${formData.open_from}`).toLocaleTimeString([], {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })}{" "}
+                {new Date(`2000-01-01T${formData.open_from}`).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}{" "}
                 –{" "}
-                {new Date(`2000-01-01T${formData.open_to}`).toLocaleTimeString([], {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })}
+                {new Date(`2000-01-01T${formData.open_to}`).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
               </span>
             </p>
           )}
@@ -260,9 +314,7 @@ export default function AddGroundForm() {
           <select name="court_type" value={formData.court_type} onChange={handleChange} className="input mt-2" required>
             <option value="">Select Court Type</option>
             {courtTypes.map((type) => (
-              <option key={type} value={type}>
-                {type}
-              </option>
+              <option key={type} value={type}>{type}</option>
             ))}
           </select>
         </div>
@@ -279,9 +331,7 @@ export default function AddGroundForm() {
               >
                 <option value="">Select Sport</option>
                 {availableSports(sport.sport).map((s) => (
-                  <option key={s} value={s}>
-                    {s}
-                  </option>
+                  <option key={s} value={s}>{s}</option>
                 ))}
               </select>
               <input
@@ -291,18 +341,10 @@ export default function AddGroundForm() {
                 onChange={(e) => handleSportChange(index, "price", e.target.value)}
                 className="input flex-1"
               />
-              <button
-                type="button"
-                onClick={() => removeSport(index)}
-                className="text-red-600 font-bold text-lg"
-              >
-                ✕
-              </button>
+              <button type="button" onClick={() => removeSport(index)} className="text-red-600 font-bold text-lg">✕</button>
             </div>
           ))}
-          <button type="button" onClick={addSport} className="text-green-700 font-semibold hover:underline">
-            + Add Sport
-          </button>
+          <button type="button" onClick={addSport} className="text-green-700 font-semibold hover:underline">+ Add Sport</button>
         </div>
 
         {/* Facilities */}
@@ -310,23 +352,15 @@ export default function AddGroundForm() {
           <h3 className="font-semibold text-green-900 text-lg mb-2">Facilities</h3>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
             {defaultFacilities.map((facility) => (
-              <label
-                key={facility}
-                className="flex items-center gap-2  px-3 py-2  hover:bg-green-100 transition"
-              >
-                <input
-                  type="checkbox"
-                  checked={formData.facilities.includes(facility)}
-                  onChange={() => handleFacilityChange(facility)}
-                  className="accent-green-700"
-                />
+              <label key={facility} className="flex items-center gap-2 px-3 py-2 hover:bg-green-100 transition">
+                <input type="checkbox" checked={formData.facilities.includes(facility)} onChange={() => handleFacilityChange(facility)} className="accent-green-700" />
                 <span className="text-green-900 text-sm">{facility}</span>
               </label>
             ))}
           </div>
         </div>
 
-        {/* Phone Number */}
+        {/* Phone */}
         <input type="text" name="phone_no" value={formData.phone_no} onChange={handleChange} placeholder="Phone Number" className="input" />
 
         {/* Images */}
@@ -337,13 +371,7 @@ export default function AddGroundForm() {
             {previewImages.map((src, index) => (
               <div key={index} className="relative">
                 <img src={src} className="w-24 h-24 object-cover rounded-lg border border-green-400" />
-                <button
-                  type="button"
-                  onClick={() => removeImage(index)}
-                  className="absolute top-0 right-0 bg-red-600 text-white text-xs px-2 py-1 rounded-bl-lg"
-                >
-                  ✕
-                </button>
+                <button type="button" onClick={() => removeImage(index)} className="absolute top-0 right-0 bg-red-600 text-white text-xs px-2 py-1 rounded-bl-lg">✕</button>
               </div>
             ))}
           </div>
@@ -353,17 +381,9 @@ export default function AddGroundForm() {
         <button
           type="submit"
           disabled={isSubmitting}
-          className={`w-full py-3 font-semibold rounded-lg text-white transition ${
-            isSubmitting ? "bg-gray-400" : "bg-green-700 hover:bg-green-800"
-          }`}
+          className={`w-full py-3 font-semibold rounded-lg text-white transition ${isSubmitting ? "bg-gray-400" : "bg-green-700 hover:bg-green-800"}`}
         >
-          {isSubmitting
-            ? mode === "edit"
-              ? "Updating..."
-              : "Adding..."
-            : mode === "edit"
-            ? "Update Ground"
-            : "Add Ground"}
+          {isSubmitting ? (mode === "edit" ? "Updating..." : "Adding...") : (mode === "edit" ? "Update Ground" : "Add Ground")}
         </button>
       </form>
     </div>
