@@ -85,18 +85,17 @@ export default function Calendar({
 
   return (
     <div className="mt-6">
-      <h3 className="text-xl font-bold mb-4 text-gray-800">Booking Calendar</h3>
-
+      {/* Month Navigation */}
       {!showTimePicker && (
         <>
-          <div className="flex justify-between items-center mb-4">
+          <div className="flex justify-between items-center mb-4 px-2 sm:px-0">
             <button
               onClick={prevMonth}
               className="px-3 py-1 rounded bg-indigo-100 hover:bg-indigo-200 text-gray-800 transition"
             >
               Prev
             </button>
-            <span className="font-semibold text-gray-800 text-lg">
+            <span className="font-semibold text-gray-800 text-base sm:text-lg">
               {currentDate.toLocaleString("default", { month: "long" })}{" "}
               {currentDate.getFullYear()}
             </span>
@@ -108,43 +107,47 @@ export default function Calendar({
             </button>
           </div>
 
-          <div className="grid grid-cols-7 gap-2 text-center mb-6">
-            {daysOfWeek.map((day) => (
-              <div key={day} className="font-semibold text-gray-600">
-                {day}
-              </div>
-            ))}
-
-            {calendarDays.map((day, idx) =>
-              day ? (
-                <button
-                  key={idx}
-                  onClick={() => handleDateClick(day)}
-                  className={`px-4 py-2 rounded-lg transition ${
-                    selectedDate ===
-                    `${currentDate.getFullYear()}-${(currentDate.getMonth() + 1)
-                      .toString()
-                      .padStart(2, "0")}-${day.toString().padStart(2, "0")}`
-                      ? "bg-green-500 text-white shadow-md scale-105"
-                      : "hover:bg-green-100 text-gray-800"
-                  }`}
-                >
+          {/* Calendar Grid */}
+          <div className="overflow-x-auto">
+            <div className="grid grid-cols-7 gap-2 text-center mb-6 min-w-[350px] sm:min-w-full">
+              {daysOfWeek.map((day) => (
+                <div key={day} className="font-semibold text-gray-600 text-xs sm:text-sm">
                   {day}
-                </button>
-              ) : (
-                <div key={idx}></div>
-              )
-            )}
+                </div>
+              ))}
+
+              {calendarDays.map((day, idx) =>
+                day ? (
+                  <button
+                    key={idx}
+                    onClick={() => handleDateClick(day)}
+                    className={`px-2 sm:px-4 py-1 sm:py-2 rounded-lg transition text-sm sm:text-base ${
+                      selectedDate ===
+                      `${currentDate.getFullYear()}-${(currentDate.getMonth() + 1)
+                        .toString()
+                        .padStart(2, "0")}-${day.toString().padStart(2, "0")}`
+                        ? "bg-green-500 text-white shadow-md scale-105"
+                        : "hover:bg-green-100 text-gray-800"
+                    }`}
+                  >
+                    {day}
+                  </button>
+                ) : (
+                  <div key={idx}></div>
+                )
+              )}
+            </div>
           </div>
         </>
       )}
 
+      {/* Time Picker */}
       {showTimePicker && selectedDate && (
         <div className="bg-gray-50 rounded-lg p-4 shadow-md mb-6">
-          <h4 className="text-lg font-semibold text-gray-800 mb-3">
+          <h4 className="text-lg sm:text-xl font-semibold text-gray-800 mb-3">
             Select Time for {selectedDate}
           </h4>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 sm:gap-3">
             {slots.map((slot) => {
               const fullSlot = `${selectedDate} ${slot}`;
               const isBooked = bookedForDate.includes(fullSlot);
@@ -159,10 +162,10 @@ export default function Calendar({
                       : !isBooked && toggleSlot(slot)
                   }
                   disabled={!isAdmin && isBooked}
-                  className={`px-3 py-2 rounded-lg text-sm font-medium transition transform ${
+                  className={`px-2 sm:px-3 py-2 rounded-lg text-xs sm:text-sm font-medium transition transform ${
                     isBooked
                       ? isAdmin
-                        ? "bg-red-500 text-white shadow-md" // Admin can click
+                        ? "bg-red-500 text-white shadow-md"
                         : "bg-red-600 text-white cursor-not-allowed opacity-90"
                       : isSelected
                       ? "bg-green-600 text-white shadow-md scale-105"
@@ -175,10 +178,10 @@ export default function Calendar({
               );
             })}
           </div>
-          <div className="flex justify-end mt-6">
+          <div className="flex justify-end mt-4 sm:mt-6">
             <button
               onClick={handleConfirm}
-              className="px-5 py-2.5 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition"
+              className="px-4 sm:px-5 py-2.5 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition text-sm sm:text-base"
             >
               Confirm Booking
             </button>
@@ -186,8 +189,9 @@ export default function Calendar({
         </div>
       )}
 
+      {/* Selected Info */}
       {selectedTimes.length > 0 && !showTimePicker && (
-        <p className="mt-2 text-gray-800 font-medium">
+        <p className="mt-2 text-gray-800 font-medium text-sm sm:text-base">
           Selected: {selectedDate} at {selectedTimes.join(", ")}
         </p>
       )}

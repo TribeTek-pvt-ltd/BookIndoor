@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import GroundCard from "@/components/GroundCard";
+import AddGroundForm from "@/components/AddGroundForm"; // ✅ Ensure this path is correct
 
 interface Ground {
   id: number;
@@ -18,9 +19,7 @@ export default function AdminPage() {
   const [grounds, setGrounds] = useState<Ground[]>([]);
   const [role] = useState<"Admin" | "User">("Admin");
   const [activeTab, setActiveTab] = useState<TabType>("grounds");
-  const [selectedSport, setSelectedSport] = useState<string | undefined>(
-    undefined
-  );
+  const [showAddForm, setShowAddForm] = useState(false);
 
   // Load stored grounds or fallback data
   useEffect(() => {
@@ -53,33 +52,25 @@ export default function AdminPage() {
   }, []);
 
   return (
-    <div className=" justify-center bg-gray-50 min-h-screen">
-      {/* Fixed Width Container */}
-      <div className="w-full  px-6 py-10 bg-white shadow-sm rounded-xl">
+    <div className="justify-center bg-gray-50 min-h-screen">
+      <div className="w-full px-4 sm:px-6 py-10 bg-white shadow-sm rounded-xl">
         {/* Header */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-800">
-              Admin Dashboard
-            </h1>
-           
-          </div>
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-4">
+          <h1 className="text-3xl font-bold text-gray-800">Admin Dashboard</h1>
+
           {role === "Admin" && activeTab === "grounds" && (
-            <Link
-              href="/admin/add-ground"
-              className="mt-4 md:mt-0 px-5 py-2 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition-all shadow-md"
+            <button
+              onClick={() => setShowAddForm(true)}
+              className="px-5 py-2 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition-all shadow-md w-full sm:w-auto"
             >
               + Add New Ground
-            </Link>
+            </button>
           )}
         </div>
 
-        {/* Tabs Navigation */}
-        <div className="flex gap-4 mb-8 border-b border-gray-200 pb-2">
-          {[
-            { key: "grounds", label: "Grounds" },
-           
-          ].map((tab) => (
+        {/* Tabs */}
+        <div className="flex gap-4 mb-8 border-b border-gray-200 pb-2 overflow-x-auto">
+          {[{ key: "grounds", label: "Grounds" }].map((tab) => (
             <button
               key={tab.key}
               onClick={() => setActiveTab(tab.key as TabType)}
@@ -94,11 +85,11 @@ export default function AdminPage() {
           ))}
         </div>
 
-        {/* Fixed-height wrapper to prevent layout shift */}
+        {/* Content */}
         <div className="min-h-[600px] transition-all duration-300">
           {activeTab === "grounds" && (
             <>
-              {/* Summary Cards */}
+              {/* Summary */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-12">
                 <SummaryCard
                   title="Total Grounds"
@@ -117,7 +108,7 @@ export default function AdminPage() {
                 />
               </div>
 
-              {/* Ground List */}
+              {/* Grounds */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10 justify-items-center">
                 {grounds.length > 0 ? (
                   grounds.map((ground) => (
@@ -131,10 +122,29 @@ export default function AdminPage() {
               </div>
             </>
           )}
-
-         
         </div>
       </div>
+
+      {/* ✅ Add Ground Modal */}
+      {showAddForm && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-y-auto max-h-[90vh] relative animate-fadeIn">
+            <button
+              onClick={() => setShowAddForm(false)}
+              className="absolute top-3 right-3 text-gray-600 hover:text-red-600 text-2xl"
+            >
+              ✕
+            </button>
+
+            <div className="p-6">
+              <h2 className="text-2xl font-bold text-green-800 mb-4 text-center">
+                Add New Ground
+              </h2>
+              <AddGroundForm />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

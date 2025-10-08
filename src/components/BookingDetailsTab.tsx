@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 
 interface Booking {
   id: number;
@@ -51,82 +51,128 @@ export default function BookingDetailsTab({
   selectedSport,
   bookings = defaultBookings,
 }: BookingDetailsTabProps) {
+  const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
+
   const filteredBookings = selectedSport
     ? bookings.filter((b) => b.sport === selectedSport)
     : bookings;
 
   return (
-    <div className="overflow-x-auto bg-white shadow-lg rounded-2xl p-4">
+    <div className="relative space-y-6">
       <h2 className="text-lg font-semibold text-gray-800 mb-4">
         {selectedSport ? `${selectedSport} Bookings` : "All Bookings"}
       </h2>
 
-      <table className="w-full text-sm text-left text-gray-700 border-collapse">
-        <thead className="bg-gray-100 text-gray-800">
-          <tr>
-            <th className="px-4 py-2">Name</th>
-            <th className="px-4 py-2">Phone</th>
-            <th className="px-4 py-2">NIC/Passport</th>
-            <th className="px-4 py-2">Sport</th>
-            <th className="px-4 py-2">Date</th>
-            <th className="px-4 py-2">Time Slot</th>
-            <th className="px-4 py-2">Booking Status</th>
-            <th className="px-4 py-2">Payment Status</th>
-            <th className="px-4 py-2">Created At</th>
-          </tr>
-        </thead>
-        <tbody>
-          {filteredBookings.length > 0 ? (
-            filteredBookings.map((booking) => (
-              <tr
-                key={booking.id}
-                className="border-b hover:bg-gray-50 transition duration-150"
-              >
-                <td className="px-4 py-2">{booking.name}</td>
-                <td className="px-4 py-2">{booking.phone}</td>
-                <td className="px-4 py-2">{booking.nic}</td>
-                <td className="px-4 py-2">{booking.sport}</td>
-                <td className="px-4 py-2">{booking.date}</td>
-                <td className="px-4 py-2">{booking.timeSlot}</td>
+      {/* Booking Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+        {filteredBookings.length > 0 ? (
+          filteredBookings.map((booking) => (
+            <div
+              key={booking.id}
+              onClick={() => setSelectedBooking(booking)}
+              className="cursor-pointer bg-white/60 backdrop-blur-md border border-gray-200 rounded-2xl shadow-md p-5 hover:shadow-lg transition-all duration-200"
+            >
+              <div className="flex justify-between items-center mb-2">
+                <p className="text-sm text-gray-600 font-medium">
+                  {booking.date}
+                </p>
+                <span
+                  className={`px-3 py-1 text-xs font-semibold rounded-full ${
+                    booking.bookingStatus === "Confirmed"
+                      ? "bg-green-100 text-green-700"
+                      : "bg-yellow-100 text-yellow-700"
+                  }`}
+                >
+                  {booking.bookingStatus}
+                </span>
+              </div>
 
-                {/* Booking Status Badge */}
-                <td className="px-4 py-2">
-                  <span
-                    className={`px-3 py-1 text-xs font-semibold rounded-full ${
-                      booking.bookingStatus === "Confirmed"
-                        ? "bg-green-100 text-green-700"
-                        : "bg-yellow-100 text-yellow-700"
-                    }`}
-                  >
-                    {booking.bookingStatus}
-                  </span>
-                </td>
+              <p className="text-gray-800 font-semibold text-base mb-1">
+                {booking.timeSlot}
+              </p>
 
-                {/* Payment Status Badge */}
-                <td className="px-4 py-2">
-                  <span
-                    className={`px-3 py-1 text-xs font-semibold rounded-full ${
-                      booking.paymentStatus === "Paid"
-                        ? "bg-green-100 text-green-700"
-                        : "bg-red-100 text-red-700"
-                    }`}
-                  >
-                    {booking.paymentStatus}
-                  </span>
-                </td>
+              <p className="text-sm text-gray-500">
+                Sport: <span className="font-medium">{booking.sport}</span>
+              </p>
+            </div>
+          ))
+        ) : (
+          <p className="text-center text-gray-500 py-8">No bookings found.</p>
+        )}
+      </div>
 
-                <td className="px-4 py-2 text-gray-500">{booking.createdAt}</td>
-              </tr>
-            ))
-          ) : (
-            <tr>
-              <td colSpan={9} className="text-center py-6 text-gray-500">
-                No bookings found.
-              </td>
-            </tr>
-          )}
-        </tbody>
-      </table>
+      {/* Popup Modal */}
+      {selectedBooking && (
+        <div className="fixed inset-0 bg-white/10 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white backdrop-blur-lg border border-white/30 rounded-2xl shadow-2xl p-6 w-full max-w-lg relative">
+            <button
+              onClick={() => setSelectedBooking(null)}
+              className="absolute top-3 right-3 text-white bg-red-500 hover:bg-red-600 rounded-full p-1 px-2 text-sm transition"
+            >
+              ✕
+            </button>
+
+            <h3 className="text-xl font-semibold text-white mb-4 text-center">
+              Booking Details
+            </h3>
+
+            <div className="text-sm space-y-2 text-gray-100">
+              <p>
+                <span className="font-semibold">Name:</span>{" "}
+                {selectedBooking.name}
+              </p>
+              <p>
+                <span className="font-semibold">Phone:</span>{" "}
+                {selectedBooking.phone}
+              </p>
+              <p>
+                <span className="font-semibold">NIC/Passport:</span>{" "}
+                {selectedBooking.nic}
+              </p>
+              <p>
+                <span className="font-semibold">Sport:</span>{" "}
+                {selectedBooking.sport}
+              </p>
+              <p>
+                <span className="font-semibold">Date:</span>{" "}
+                {selectedBooking.date}
+              </p>
+              <p>
+                <span className="font-semibold">Time Slot:</span>{" "}
+                {selectedBooking.timeSlot}
+              </p>
+              <p>
+                <span className="font-semibold">Booking Status:</span>{" "}
+                <span
+                  className={`px-2 py-1 rounded text-xs font-medium ${
+                    selectedBooking.bookingStatus === "Confirmed"
+                      ? "bg-green-200 text-green-800"
+                      : "bg-yellow-200 text-yellow-800"
+                  }`}
+                >
+                  {selectedBooking.bookingStatus}
+                </span>
+              </p>
+              <p>
+                <span className="font-semibold">Payment Status:</span>{" "}
+                <span
+                  className={`px-2 py-1 rounded text-xs font-medium ${
+                    selectedBooking.paymentStatus === "Paid"
+                      ? "bg-green-200 text-green-800"
+                      : "bg-red-200 text-red-800"
+                  }`}
+                >
+                  {selectedBooking.paymentStatus}
+                </span>
+              </p>
+              <p>
+                <span className="font-semibold">Created At:</span>{" "}
+                {selectedBooking.createdAt}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

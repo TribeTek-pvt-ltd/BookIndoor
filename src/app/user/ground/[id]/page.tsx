@@ -10,6 +10,7 @@ import {
   HomeIcon,
   MapPinIcon,
   StarIcon,
+  ClockIcon,
 } from "@heroicons/react/24/solid";
 import Calendar from "@/components/Calendar";
 
@@ -20,12 +21,16 @@ interface Ground {
   sports: { name: string; price: number }[];
   facilities: string[];
   images: string[];
+  openTime: string;
+  closeTime: string;
 }
 
 const mockGround: Ground = {
   id: "1",
   name: "Indoor Arena",
   location: "Colombo",
+  openTime: "08:00 AM",
+  closeTime: "10:00 PM",
   sports: [
     { name: "Badminton", price: 1000 },
     { name: "Futsal", price: 2000 },
@@ -51,16 +56,12 @@ const facilityIcons: Record<string, JSX.Element> = {
 export default function UserGroundDetails() {
   const params = useParams();
   const id = Array.isArray(params.id) ? params.id[0] : params.id;
-
   if (!id)
     return <p className="text-center mt-10 text-red-500">Invalid ground ID</p>;
 
   const ground = mockGround;
   const [currentImage, setCurrentImage] = useState(0);
   const [selectedSport, setSelectedSport] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<"calendar" | "summary" | "details">(
-    "calendar"
-  );
 
   const prevImage = () =>
     setCurrentImage((prev) =>
@@ -75,35 +76,38 @@ export default function UserGroundDetails() {
     "bg-green-100/20 backdrop-blur-md border border-green-700/30 rounded-2xl shadow-lg p-6";
 
   return (
-    <div className="max-w-7xl mx-auto px-6 py-10 space-y-10">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-10 space-y-8 sm:space-y-10">
       {/* Image Carousel */}
       <div className="relative rounded-2xl overflow-hidden shadow-lg">
         <img
           src={ground.images[currentImage]}
           alt={ground.name}
-          className="w-full h-80 sm:h-[28rem] object-cover transition-all duration-500"
+          className="w-full h-60 sm:h-[28rem] object-cover transition-all duration-500"
         />
         <button
           onClick={prevImage}
-          className="absolute top-1/2 left-4 -translate-y-1/2 bg-white/80 p-2 rounded-full shadow hover:scale-105 transition"
+          className="absolute top-1/2 left-3 sm:left-4 -translate-y-1/2 bg-white/80 p-2 rounded-full shadow hover:scale-105 transition"
         >
           ◀
         </button>
         <button
           onClick={nextImage}
-          className="absolute top-1/2 right-4 -translate-y-1/2 bg-white/80 p-2 rounded-full shadow hover:scale-105 transition"
+          className="absolute top-1/2 right-3 sm:right-4 -translate-y-1/2 bg-white/80 p-2 rounded-full shadow hover:scale-105 transition"
         >
           ▶
         </button>
       </div>
 
       {/* Ground Info */}
-      <div className={glassCardClasses + " flex flex-col sm:flex-row justify-between gap-6"}>
-        <div>
-          <h1 className="text-3xl font-bold text-white flex items-center gap-2">
+      <div
+        className={`${glassCardClasses} flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 sm:gap-6`}
+      >
+        <div className="flex-1 space-y-3">
+          <h1 className="text-2xl sm:text-3xl font-bold text-white flex items-center gap-2">
             {ground.name} <StarIcon className="w-6 h-6 text-yellow-400" />
           </h1>
-          <p className="text-green-200 mt-2 flex items-center gap-2">
+
+          <p className="text-green-200 flex items-center gap-2 flex-wrap">
             <MapPinIcon className="w-5 h-5 text-green-400" />
             {ground.location}
             <a
@@ -117,13 +121,25 @@ export default function UserGroundDetails() {
               View on Map
             </a>
           </p>
+
+          {/* ✅ Open Time Display */}
+          <div className="flex items-center gap-2 text-green-200">
+            <p className="text-green-200 mt-2 flex items-center gap-2">
+            <ClockIcon className="w-5 h-5 text-green-400" />
+            Open Time: {ground.openTime} – {ground.closeTime}
+          </p>
+          </div>
+
+          {/* Facilities */}
           <div className="flex flex-wrap gap-2 mt-4">
             {ground.facilities.map((facility) => (
               <span
                 key={facility}
-                className="px-4 py-2 bg-green-800 text-white rounded-full text-sm font-medium flex items-center gap-1"
+                className="px-3 py-1.5 sm:px-4 sm:py-2 bg-green-800 text-white rounded-full text-sm sm:text-base font-medium flex items-center gap-1"
               >
-                {facilityIcons[facility] || <HomeIcon className="w-5 h-5 text-green-500" />}
+                {facilityIcons[facility] || (
+                  <HomeIcon className="w-5 h-5 text-green-500" />
+                )}
                 {facility}
               </span>
             ))}
@@ -133,15 +149,15 @@ export default function UserGroundDetails() {
 
       {/* Sports Selection */}
       <div className={glassCardClasses}>
-        <h2 className="text-xl font-semibold text-white mb-4">
+        <h2 className="text-lg sm:text-xl font-semibold text-white mb-4">
           Select a Sport to Book
         </h2>
-        <div className="flex flex-wrap gap-4">
+        <div className="flex flex-wrap gap-3 sm:gap-4">
           {ground.sports.map((sport) => (
             <button
               key={sport.name}
               onClick={() => setSelectedSport(sport.name)}
-              className={`px-5 py-3 rounded-xl border font-semibold transition ${
+              className={`px-4 py-2 sm:px-5 sm:py-3 rounded-xl border font-semibold text-sm sm:text-base transition ${
                 selectedSport === sport.name
                   ? "bg-green-600 text-white border-green-600 scale-105"
                   : "bg-white text-green-900 border-green-600 hover:bg-green-100 hover:text-green-900"
@@ -153,41 +169,18 @@ export default function UserGroundDetails() {
         </div>
       </div>
 
-      {/* Booking Tabs */}
+      {/* Booking Calendar */}
       {selectedSport && (
         <div className={glassCardClasses}>
-          {/* Tabs */}
-          <div className="flex gap-4 mb-6 border-b border-green-700 pb-2 justify-center">
-            {[
-              { key: "calendar", label: "Booking Calendar" },
-             
-            ].map((tab) => (
-              <button
-                key={tab.key}
-                onClick={() =>
-                  setActiveTab(tab.key as "calendar")
-                }
-                className={`px-4 py-2 rounded-t-lg font-medium transition ${
-                  activeTab === tab.key
-                    ? "text-green-900 border-b-2 border-green-600"
-                    : "text-green-700 hover:text-green-900"
-                }`}
-              >
-                {tab.label}
-              </button>
-            ))}
+          <div className="flex justify-center mb-4 border-b border-green-700 pb-2">
+            <h3 className="text-lg sm:text-xl text-white font-medium">
+              Booking Calendar – {selectedSport}
+            </h3>
           </div>
-
-          {/* Tab Content */}
-          <div className="transition-all duration-300">
-            {activeTab === "calendar" && (
-              <Calendar
-                bookedSlots={mockBookedSlots[selectedSport] || []}
-                groundName={`${ground.name} - ${selectedSport}`}
-              />
-            )}
-            
-          </div>
+          <Calendar
+            bookedSlots={mockBookedSlots[selectedSport] || []}
+            groundName={`${ground.name} - ${selectedSport}`}
+          />
         </div>
       )}
     </div>

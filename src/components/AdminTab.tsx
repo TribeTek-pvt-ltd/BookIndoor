@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Key } from "react";
 import AddAdminForm from "./AddAdminForm";
 import { useRouter } from "next/navigation";
 
 interface Admin {
+  id: Key | null | undefined;
   _id: string;
   name: string;
   email: string;
@@ -74,68 +75,83 @@ export default function AdminTab() {
     }
   };
 
+  const handleViewProfile = (adminId: string) => {
+      router.push(`/admin/profile/${adminId}`);
+    };
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 relative w-full max-w-full mx-auto px-3 sm:px-6 mb-10">
       {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <h2 className="text-xl font-semibold text-gray-800">Manage Admins</h2>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <h2 className="text-xl sm:text-2xl font-semibold text-gray-800">
+          Manage Admins
+        </h2>
         <button
-          onClick={() => setShowAddForm(!showAddForm)}
-          className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition">
-          {showAddForm ? "Close Form" : "Add Admin"}
+          onClick={() => setShowAddForm(true)}
+          className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition w-full sm:w-auto text-center"
+        >
+          Add Admin
         </button>
       </div>
 
-      {/* Add Admin Form */}
-      {showAddForm && (
-        <div className="bg-gray-50 p-4 rounded-lg shadow-inner border border-gray-200">
-          <AddAdminForm onAddAdmin={handleAddAdmin} />
-        </div>
-      )}
-
       {/* Admin List */}
-      <div className="bg-white p-4 rounded-lg shadow-md">
+      <div className="bg-white p-4 rounded-lg shadow-md overflow-x-auto">
         <h3 className="text-lg font-semibold mb-4">All Admins</h3>
         {loading ? (
           <p className="text-gray-500 text-center py-8">Loading admins...</p>
         ) : admins.length === 0 ? (
           <p className="text-gray-500 text-center py-8">No admins found.</p>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[600px] border-collapse text-left text-gray-700">
-              <thead className="bg-gray-100">
-                <tr>
-                  <th className="p-3 border-b">Profile</th>
-                  <th className="p-3 border-b">Name</th>
-                  <th className="p-3 border-b">Email</th>
-                  <th className="p-3 border-b">Managing Ground</th>
-                </tr>
-              </thead>
-              <tbody>
-                {admins.map((admin) => (
-                  <tr
-                    key={admin._id}
-                    onClick={() => router.push(`/admin/profile/${admin._id}`)}
-                    className="hover:bg-gray-50 cursor-pointer transition">
-                    <td className="p-3 border-b">
-                      <img
-                        src={admin.image || "/default-avatar.png"}
-                        alt={admin.name}
-                        className="w-12 h-12 rounded-full object-cover"
-                      />
-                    </td>
-                    <td className="p-3 border-b font-medium">{admin.name}</td>
-                    <td className="p-3 border-b">{admin.email}</td>
-                    <td className="p-3 border-b">
-                      {admin.managingGround || "-"}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <table className="w-full min-w-[500px] sm:min-w-[600px] border-collapse text-left text-gray-700">
+            <thead className="bg-gray-100">
+              <tr>
+                <th className="p-3 border-b">Profile</th>
+                <th className="p-3 border-b">Name</th>
+                <th className="p-3 border-b">Email</th>
+                <th className="p-3 border-b">Managing Ground</th>
+              </tr>
+            </thead>
+            <tbody>
+              {admins.map((admin) => (
+                              <tr
+                                key={admin._id}
+                                onClick={() => handleViewProfile(admin._id)}
+                                className="hover:bg-gray-50 cursor-pointer transition"
+                              >
+                                <td className="p-3 border-b">
+                                  <img
+                                    src={admin.image || "/default-avatar.png"}
+                                    alt={admin.name}
+                                    className="w-10 h-10 sm:w-12 sm:h-12 rounded-full object-cover"
+                                  />
+                                </td>
+                                <td className="p-3 border-b font-medium">{admin.name}</td>
+                                <td className="p-3 border-b">{admin.email}</td>
+                                <td className="p-3 border-b">{admin.managingGround}</td>
+                              </tr>
+                            ))}
+            </tbody>
+          </table>
         )}
       </div>
+
+      {/* Popup Modal */}
+      {showAddForm && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-3 sm:p-6">
+          <div className="bg-white/20 backdrop-blur-md border border-white/30 shadow-2xl p-5 sm:p-6 rounded-2xl w-full max-w-md relative overflow-y-auto max-h-[90vh]">
+            <button
+              onClick={() => setShowAddForm(false)}
+              className="absolute top-3 right-3 text-white bg-red-500 hover:bg-red-600 rounded-full p-1 px-2 text-sm transition"
+            >
+              ✕
+            </button>
+            <h3 className="text-lg sm:text-xl font-semibold text-white mb-4 text-center">
+              Add New Admin
+            </h3>
+            <AddAdminForm onAddAdmin={handleAddAdmin} />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
