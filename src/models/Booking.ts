@@ -1,52 +1,58 @@
-import mongoose, { Schema, Document } from "mongoose";
+import mongoose, { Schema, Document, Types } from "mongoose";
 
-export interface IBookingSlot {
-  timeSlot: string; // e.g., "06:00-07:00"
-  status: "reserved" | "confirmed"; // reserved = advanced paid, confirmed = fully paid
+export interface ITimeSlot {
+  startTime: string; // "10:00"
 }
 
 export interface IBooking extends Document {
-  user: mongoose.Types.ObjectId;
-  ground: mongoose.Types.ObjectId;
-  sport: string;
-  date: string; // YYYY-MM-DD
-  slots: IBookingSlot[];
+  ground: Types.ObjectId;
+  sportName: string;
+  user?: Types.ObjectId; // admin user if logged in
+  guest?: {
+    name: string;
+    email?: string;
+    phone: string;
+  };
+  date: string; // "YYYY-MM-DD"
+  timeSlots: ITimeSlot[];
+  status: "reserved" | "confirmed";
   paymentStatus: "advanced_paid" | "full_paid";
+  totalAmount: number;
   createdAt: Date;
 }
 
-const BookingSlotSchema = new Schema<IBookingSlot>(
+const TimeSlotSchema = new Schema<ITimeSlot>(
   {
-    timeSlot: { type: String, required: true },
-    status: {
-      type: String,
-      enum: ["reserved", "confirmed"],
-      default: "reserved",
-    },
+    startTime: { type: String, required: true },
   },
   { _id: false }
 );
 
 const BookingSchema = new Schema<IBooking>(
   {
-    user: { type: Schema.Types.ObjectId, ref: "User", required: true },
     ground: { type: Schema.Types.ObjectId, ref: "Ground", required: true },
-    sport: { type: String, required: true },
+    sportName: { type: String, required: true },
+    user: { type: Schema.Types.ObjectId, ref: "User" }, // optional if admin
+    guest: {
+      name: { type: String },
+      email: { type: String },
+      phone: { type: String, required: true },
+    },
     date: { type: String, required: true },
-    slots: { type: [BookingSlotSchema], required: true },
+    timeSlots: { type: [TimeSlotSchema], required: true },
+    status: {
+      type: String,
+      enum: ["reserved", "confirmed"],
+      default: "reserved",
+    },
     paymentStatus: {
       type: String,
       enum: ["advanced_paid", "full_paid"],
-      required: true,
+      default: "advanced_paid",
     },
+    totalAmount: { type: Number, required: true },
   },
   { timestamps: true }
-);
-
-// Prevent double booking for same ground + sport + date + slot
-BookingSchema.index(
-  { ground: 1, sport: 1, date: 1, "slots.timeSlot": 1 },
-  { unique: true }
 );
 
 export default mongoose.models.Booking ||
