@@ -182,10 +182,7 @@ export default function UserGroundDetails() {
               Booking Calendar – {selectedSport}
             </h3>
           </div>
-          <Calendar
-            bookedSlots={[]} // replace with actual booked slots from API later
-            groundName={`${ground.name} - ${selectedSport}`}
-          />
+          <Calendar groundId={id} />
         </div>
       )}
     </div>
