@@ -36,6 +36,7 @@ export async function GET(
       sports: ground.sports,
       images: ground.images,
       availableTime: ground.availableTime,
+      amenities: ground.amenities,
     };
     return NextResponse.json(publicGround);
   } catch (err: any) {

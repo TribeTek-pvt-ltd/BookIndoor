@@ -18,7 +18,7 @@ interface GroundCardProps {
 export default function GroundCard({ ground, role = "User" }: GroundCardProps) {
   const link =
     role === "Admin"
-      ? `/admin/ground/${ground.id}`
+      ? `/user/ground/${ground.id}`
       : `/user/ground/${ground.id}`;
 
   return (

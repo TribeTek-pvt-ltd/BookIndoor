@@ -1,7 +1,7 @@
 "use client";
 
 import { useParams } from "next/navigation";
-import { useState, JSX } from "react";
+import { useEffect, useState, JSX } from "react";
 import {
   WifiIcon,
   UserGroupIcon,
@@ -14,54 +14,68 @@ import {
 } from "@heroicons/react/24/solid";
 import Calendar from "@/components/Calendar";
 
-interface Ground {
-  id: string;
-  name: string;
-  location: string;
-  sports: { name: string; price: number }[];
-  facilities: string[];
-  images: string[];
-  openTime: string;
-  closeTime: string;
+interface Location {
+  address: string;
+  lat: number;
+  lng: number;
 }
 
-const mockGround: Ground = {
-  id: "1",
-  name: "Indoor Arena",
-  location: "Colombo",
-  openTime: "08:00 AM",
-  closeTime: "10:00 PM",
-  sports: [
-    { name: "Badminton", price: 1000 },
-    { name: "Futsal", price: 2000 },
-    { name: "Basketball", price: 2500 },
-  ],
-  facilities: ["Locker Room", "Parking", "Cafeteria", "Wi-Fi"],
-  images: ["/arena1.jpg", "/arena2.jpg", "/arena3.jpg"],
-};
+interface Sport {
+  name: string;
+  pricePerHour: number;
+}
 
-const mockBookedSlots: Record<string, string[]> = {
-  Badminton: ["2025-10-02 09:00", "2025-10-02 12:00"],
-  Futsal: ["2025-10-02 11:00", "2025-10-02 16:00"],
-  Basketball: ["2025-10-03 14:00"],
-};
+interface Ground {
+  name: string;
+  location: Location;
+  sports: Sport[];
+  amenities: string[];
+  images: string[];
+  availableTime: {
+    from: string;
+    to: string;
+  };
+}
 
 const facilityIcons: Record<string, JSX.Element> = {
-  "Locker Room": <UserGroupIcon className="w-5 h-5 text-green-500" />,
   Parking: <TruckIcon className="w-5 h-5 text-green-500" />,
+  Lighting: <WifiIcon className="w-5 h-5 text-green-500" />,
+  Restrooms: <UserGroupIcon className="w-5 h-5 text-green-500" />,
   Cafeteria: <ShoppingBagIcon className="w-5 h-5 text-green-500" />,
-  "Wi-Fi": <WifiIcon className="w-5 h-5 text-green-500" />,
 };
 
 export default function UserGroundDetails() {
   const params = useParams();
   const id = Array.isArray(params.id) ? params.id[0] : params.id;
-  if (!id)
-    return <p className="text-center mt-10 text-red-500">Invalid ground ID</p>;
 
-  const ground = mockGround;
+  const [ground, setGround] = useState<Ground | null>(null);
+  const [loading, setLoading] = useState(true);
   const [currentImage, setCurrentImage] = useState(0);
   const [selectedSport, setSelectedSport] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchGround = async () => {
+      try {
+        const res = await fetch(`/api/grounds/${id}`);
+        if (!res.ok) throw new Error("Failed to fetch ground");
+        const data: Ground = await res.json();
+        setGround(data);
+      } catch (err) {
+        console.error("Failed to fetch ground:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (id) fetchGround();
+  }, [id]);
+
+  if (!id)
+    return <p className="text-center mt-10 text-red-500">Invalid ground ID</p>;
+  if (loading)
+    return <p className="text-center mt-10 text-green-500">Loading...</p>;
+  if (!ground)
+    return <p className="text-center mt-10 text-red-500">Ground not found</p>;
 
   const prevImage = () =>
     setCurrentImage((prev) =>
@@ -86,22 +100,19 @@ export default function UserGroundDetails() {
         />
         <button
           onClick={prevImage}
-          className="absolute top-1/2 left-3 sm:left-4 -translate-y-1/2 bg-white/80 p-2 rounded-full shadow hover:scale-105 transition"
-        >
+          className="absolute top-1/2 left-3 sm:left-4 -translate-y-1/2 bg-white/80 p-2 rounded-full shadow hover:scale-105 transition">
           ◀
         </button>
         <button
           onClick={nextImage}
-          className="absolute top-1/2 right-3 sm:right-4 -translate-y-1/2 bg-white/80 p-2 rounded-full shadow hover:scale-105 transition"
-        >
+          className="absolute top-1/2 right-3 sm:right-4 -translate-y-1/2 bg-white/80 p-2 rounded-full shadow hover:scale-105 transition">
           ▶
         </button>
       </div>
 
       {/* Ground Info */}
       <div
-        className={`${glassCardClasses} flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 sm:gap-6`}
-      >
+        className={`${glassCardClasses} flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 sm:gap-6`}>
         <div className="flex-1 space-y-3">
           <h1 className="text-2xl sm:text-3xl font-bold text-white flex items-center gap-2">
             {ground.name} <StarIcon className="w-6 h-6 text-yellow-400" />
@@ -109,34 +120,29 @@ export default function UserGroundDetails() {
 
           <p className="text-green-200 flex items-center gap-2 flex-wrap">
             <MapPinIcon className="w-5 h-5 text-green-400" />
-            {ground.location}
+            {ground.location.address}
             <a
               href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-                ground.location
+                ground.location.address
               )}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-green-300 hover:underline text-sm ml-2"
-            >
+              className="text-green-300 hover:underline text-sm ml-2">
               View on Map
             </a>
           </p>
 
-          {/* ✅ Open Time Display */}
           <div className="flex items-center gap-2 text-green-200">
-            <p className="text-green-200 mt-2 flex items-center gap-2">
             <ClockIcon className="w-5 h-5 text-green-400" />
-            Open Time: {ground.openTime} – {ground.closeTime}
-          </p>
+            Open Time: {ground.availableTime.from} – {ground.availableTime.to}
           </div>
 
           {/* Facilities */}
           <div className="flex flex-wrap gap-2 mt-4">
-            {ground.facilities.map((facility) => (
+            {ground.amenities.map((facility) => (
               <span
                 key={facility}
-                className="px-3 py-1.5 sm:px-4 sm:py-2 bg-green-800 text-white rounded-full text-sm sm:text-base font-medium flex items-center gap-1"
-              >
+                className="px-3 py-1.5 sm:px-4 sm:py-2 bg-green-800 text-white rounded-full text-sm sm:text-base font-medium flex items-center gap-1">
                 {facilityIcons[facility] || (
                   <HomeIcon className="w-5 h-5 text-green-500" />
                 )}
@@ -161,9 +167,8 @@ export default function UserGroundDetails() {
                 selectedSport === sport.name
                   ? "bg-green-600 text-white border-green-600 scale-105"
                   : "bg-white text-green-900 border-green-600 hover:bg-green-100 hover:text-green-900"
-              }`}
-            >
-              {sport.name} – Rs {sport.price}
+              }`}>
+              {sport.name} – Rs {sport.pricePerHour}
             </button>
           ))}
         </div>
@@ -178,7 +183,7 @@ export default function UserGroundDetails() {
             </h3>
           </div>
           <Calendar
-            bookedSlots={mockBookedSlots[selectedSport] || []}
+            bookedSlots={[]} // replace with actual booked slots from API later
             groundName={`${ground.name} - ${selectedSport}`}
           />
         </div>
