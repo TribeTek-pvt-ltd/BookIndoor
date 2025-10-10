@@ -2,9 +2,10 @@
 
 import { useParams } from "next/navigation";
 import { useEffect, useState, JSX } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import {
-  MapPinIcon,
+  // MapPinIcon,
   StarIcon,
   PencilSquareIcon,
   TrashIcon,
@@ -44,12 +45,13 @@ export default function AdminGroundDetails() {
   const [ground, setGround] = useState<Ground | null>(null);
   const [currentImage, setCurrentImage] = useState(0);
   const [selectedSport, setSelectedSport] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<"calendar" | "details" | "summary">(
-    "calendar"
-  );
+  const [activeTab, setActiveTab] = useState<
+    "calendar" | "details" | "summary"
+  >("calendar");
   const [loading, setLoading] = useState(true);
 
-  const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+  const token =
+    typeof window !== "undefined" ? localStorage.getItem("token") : null;
   const userRole =
     typeof window !== "undefined" ? localStorage.getItem("role") : "guest";
 
@@ -81,7 +83,9 @@ export default function AdminGroundDetails() {
 
   const nextImage = () =>
     setCurrentImage((prev) =>
-      ground && ground.images && prev === ground.images.length - 1 ? 0 : prev + 1
+      ground && ground.images && prev === ground.images.length - 1
+        ? 0
+        : prev + 1
     );
 
   const glassCardClasses =
@@ -108,21 +112,19 @@ export default function AdminGroundDetails() {
       {/* Image Carousel */}
       {ground.images && ground.images.length > 0 && (
         <div className="relative rounded-2xl overflow-hidden shadow-lg">
-          <img
+          <Image
             src={ground.images[currentImage]}
             alt={ground.name}
             className="w-full h-64 sm:h-80 md:h-[28rem] object-cover transition-all duration-500"
           />
           <button
             onClick={prevImage}
-            className="absolute top-1/2 left-4 -translate-y-1/2 bg-white/80 p-2 rounded-full shadow hover:scale-105 transition"
-          >
+            className="absolute top-1/2 left-4 -translate-y-1/2 bg-white/80 p-2 rounded-full shadow hover:scale-105 transition">
             ◀
           </button>
           <button
             onClick={nextImage}
-            className="absolute top-1/2 right-4 -translate-y-1/2 bg-white/80 p-2 rounded-full shadow hover:scale-105 transition"
-          >
+            className="absolute top-1/2 right-4 -translate-y-1/2 bg-white/80 p-2 rounded-full shadow hover:scale-105 transition">
             ▶
           </button>
         </div>
@@ -130,8 +132,7 @@ export default function AdminGroundDetails() {
 
       {/* Ground Info */}
       <div
-        className={`${glassCardClasses} flex flex-col md:flex-row justify-between gap-6`}
-      >
+        className={`${glassCardClasses} flex flex-col md:flex-row justify-between gap-6`}>
         <div className="flex-1">
           <h1 className="text-2xl sm:text-3xl font-bold text-green-900 flex items-center gap-2">
             {ground.name}
@@ -162,8 +163,7 @@ export default function AdminGroundDetails() {
               {ground.facilities.map((facility) => (
                 <span
                   key={facility}
-                  className="flex items-center gap-1 px-3 py-1 sm:px-4 sm:py-2 bg-green-800 text-white rounded-full text-sm sm:text-base font-medium"
-                >
+                  className="flex items-center gap-1 px-3 py-1 sm:px-4 sm:py-2 bg-green-800 text-white rounded-full text-sm sm:text-base font-medium">
                   {facilityIcons[facility] || <ClockIcon className="w-5 h-5" />}
                   {facility}
                 </span>
@@ -177,8 +177,7 @@ export default function AdminGroundDetails() {
           <div className="flex gap-3 self-start sm:self-center mt-4 md:mt-0">
             <Link
               href={`/admin/add-ground?id=${ground._id}`}
-              className="flex items-center gap-2 px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition"
-            >
+              className="flex items-center gap-2 px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition">
               <PencilSquareIcon className="w-5 h-5" />
             </Link>
             <button className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition">
@@ -206,8 +205,7 @@ export default function AdminGroundDetails() {
                   selectedSport === sport.name
                     ? "bg-green-600 text-white border-green-600 scale-105"
                     : "bg-white text-green-900 border-green-600 hover:bg-green-100 hover:text-green-900"
-                }`}
-              >
+                }`}>
                 {sport.name} – Rs {sport.price}
               </button>
             ))}
@@ -234,8 +232,7 @@ export default function AdminGroundDetails() {
                   activeTab === tab.key
                     ? "text-green-900 border-b-2 border-green-600"
                     : "text-green-700 hover:text-green-900"
-                }`}
-              >
+                }`}>
                 {tab.label}
               </button>
             ))}
@@ -245,7 +242,7 @@ export default function AdminGroundDetails() {
           <div className="transition-all duration-300">
             {activeTab === "calendar" && (
               <Calendar
-                bookedSlots={[]}
+                groundId={ground._id}
                 groundName={`${ground.name} - ${selectedSport}`}
               />
             )}

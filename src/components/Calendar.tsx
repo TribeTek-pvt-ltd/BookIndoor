@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 
 interface CalendarProps {
   groundId: string;
+  groundName?: string;
   isAdmin?: boolean;
   onSlotClick?: (slot: string) => void;
 }
@@ -12,6 +13,7 @@ const daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 export default function Calendar({
   groundId,
+  groundName,
   isAdmin = false,
   onSlotClick,
 }: CalendarProps) {
@@ -101,6 +103,7 @@ export default function Calendar({
       date: selectedDate!,
       times: selectedTimes.join(","),
       ground: groundId,
+      groundName: groundName || "Ground",
     }).toString();
 
     router.push(`/user/booking/payment?${query}`);

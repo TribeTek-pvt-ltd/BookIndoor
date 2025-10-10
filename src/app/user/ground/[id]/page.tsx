@@ -182,7 +182,7 @@ export default function UserGroundDetails() {
               Booking Calendar – {selectedSport}
             </h3>
           </div>
-          <Calendar groundId={id} />
+          <Calendar groundId={id} groundName={ground.name} />
         </div>
       )}
     </div>

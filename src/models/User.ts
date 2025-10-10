@@ -12,7 +12,6 @@ export interface IUser extends Document {
   bankName?: string;
   accountNumber?: string;
   branchName?: string;
-  managingGrounds?: Types.ObjectId[]; // array of grounds managed
   createdAt: Date;
 }
 
@@ -24,10 +23,9 @@ const UserSchema = new Schema<IUser>({
   phone: { type: String },
   address: { type: String },
   nicNumber: { type: String },
-  bankName: { type: String },
-  accountNumber: { type: String },
-  branchName: { type: String },
-  managingGrounds: [{ type: Schema.Types.ObjectId, ref: "Ground" }],
+  bankName: { type: String, required: true },
+  accountNumber: { type: String, required: true },
+  branchName: { type: String, required: true },
   createdAt: { type: Date, default: Date.now },
 });
 

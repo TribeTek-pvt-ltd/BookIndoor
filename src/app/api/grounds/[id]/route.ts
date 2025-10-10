@@ -10,15 +10,19 @@ export async function GET(
   try {
     await dbConnect();
     const { id } = params;
-
     const url = new URL(req.url);
     const token = url.searchParams.get("token");
     const decoded = token ? verifyToken(token) : null;
-
-    const ground = await Ground.findById(id).populate(
-      "owner",
-      "name email role"
-    );
+    let ground: any;
+    if (
+      decoded &&
+      (["admin", "super_admin"].includes(decoded.role) ||
+        decoded.id === String(ground?.owner._id))
+    ) {
+      ground = await Ground.findById(id).populate("owner", "name email role");
+    } else {
+      ground = await Ground.findById(id);
+    }
     if (!ground)
       return NextResponse.json({ error: "Ground not found" }, { status: 404 });
 

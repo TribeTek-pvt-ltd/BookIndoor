@@ -15,7 +15,7 @@ type TabType = "grounds" | "summary" | "details";
 
 export default function AdminPage() {
   const [grounds, setGrounds] = useState<Ground[]>([]);
-  const [stats, setStats] = useState<Stats>({
+  const [, setStats] = useState<Stats>({
     totalAdmins: 0,
     totalGrounds: 0,
     totalRevenue: 0,

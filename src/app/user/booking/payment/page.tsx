@@ -21,11 +21,15 @@ export default function PaymentPage() {
   useEffect(() => {
     const date = searchParams.get("date") || "";
     const times = searchParams.get("times")?.split(",") || [];
-    const ground = searchParams.get("ground") || "";
-    setBookingDetails({ date, times, groundName: ground });
+    const groundName = searchParams.get("groundName") || "";
+    setBookingDetails({ date, times, groundName: groundName });
   }, [searchParams]);
 
-  const handleNext = (formData: { name: string; phone: string; nic: string }) => {
+  const handleNext = (formData: {
+    name: string;
+    phone: string;
+    nic: string;
+  }) => {
     setBookingDetails((prev) => ({ ...prev, ...formData }));
     setStep("payment");
   };
@@ -56,13 +60,11 @@ export default function PaymentPage() {
           <span
             className={`w-4 h-4 rounded-full transition-all ${
               step === "form" ? "bg-green-700 scale-110" : "bg-green-400"
-            }`}
-          ></span>
+            }`}></span>
           <span
             className={`w-4 h-4 rounded-full transition-all ${
               step === "payment" ? "bg-green-700 scale-110" : "bg-green-400"
-            }`}
-          ></span>
+            }`}></span>
         </div>
       </div>
     </div>
