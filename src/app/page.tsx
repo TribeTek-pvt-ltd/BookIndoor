@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 
 export default function HomePage() {
   return (
-    <section className="relative w-full flex flex-col items-center justify-center overflow-hidden text-white">
+    <section className="relative w-full h-screen flex flex-col items-center justify-center overflow-hidden text-white">
       
 
       {/* Refined Green Overlay */}
