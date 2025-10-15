@@ -12,6 +12,7 @@ export interface IBooking extends Document {
     name: string;
     email?: string;
     phone: string;
+    nicNumber: string;
   };
   date: string; // "YYYY-MM-DD"
   timeSlots: ITimeSlot[];
@@ -37,6 +38,7 @@ const BookingSchema = new Schema<IBooking>(
       name: { type: String },
       email: { type: String },
       phone: { type: String, required: true },
+      nicNumber: { type: String, required: false },
     },
     date: { type: String, required: true },
     timeSlots: { type: [TimeSlotSchema], required: true },
@@ -54,6 +56,7 @@ const BookingSchema = new Schema<IBooking>(
   },
   { timestamps: true }
 );
+console.log("Booking model compiled", BookingSchema);
 
 export default mongoose.models.Booking ||
   mongoose.model<IBooking>("Booking", BookingSchema);

@@ -119,22 +119,19 @@ export default function UserGroundDetails() {
           />
           <button
             onClick={prevImage}
-            className="absolute top-1/2 left-3 sm:left-4 -translate-y-1/2 bg-white/80 p-2 rounded-full shadow hover:scale-105 transition"
-          >
+            className="absolute top-1/2 left-3 sm:left-4 -translate-y-1/2 bg-white/80 p-2 rounded-full shadow hover:scale-105 transition">
             ◀
           </button>
           <button
             onClick={nextImage}
-            className="absolute top-1/2 right-3 sm:right-4 -translate-y-1/2 bg-white/80 p-2 rounded-full shadow hover:scale-105 transition"
-          >
+            className="absolute top-1/2 right-3 sm:right-4 -translate-y-1/2 bg-white/80 p-2 rounded-full shadow hover:scale-105 transition">
             ▶
           </button>
         </div>
 
         {/* Ground Info */}
         <div
-          className={`${glassCardClasses} flex-1 flex flex-col justify-center space-y-4`}
-        >
+          className={`${glassCardClasses} flex-1 flex flex-col justify-center space-y-4`}>
           <h1 className="text-2xl sm:text-3xl font-bold text-green-100 flex items-center gap-2">
             {ground.name}
           </h1>
@@ -148,8 +145,7 @@ export default function UserGroundDetails() {
               )}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-green-300 hover:underline text-sm ml-2"
-            >
+              className="text-green-300 hover:underline text-sm ml-2">
               View on Map
             </a>
           </p>
@@ -164,8 +160,7 @@ export default function UserGroundDetails() {
             {ground.amenities.map((facility) => (
               <span
                 key={facility}
-                className="px-3 py-1.5 sm:px-4 sm:py-2 bg-green-700 text-white rounded-full text-sm sm:text-base font-medium flex items-center gap-1"
-              >
+                className="px-3 py-1.5 sm:px-4 sm:py-2 bg-green-700 text-white rounded-full text-sm sm:text-base font-medium flex items-center gap-1">
                 {facilityIcons[facility] || (
                   <HomeIcon className="w-5 h-5 text-green-400" />
                 )}
@@ -194,8 +189,7 @@ export default function UserGroundDetails() {
                 selectedSport === sport.name
                   ? "bg-green-600 text-white border-green-600 scale-105"
                   : "bg-white text-green-900 border-green-600 hover:bg-green-100 hover:text-green-900"
-              }`}
-            >
+              }`}>
               {sport.name} – Rs {sport.pricePerHour}
             </button>
           ))}
@@ -208,8 +202,7 @@ export default function UserGroundDetails() {
           <div className="bg-white rounded-2xl w-11/12 max-w-lg p-6 relative">
             <button
               onClick={() => setShowCalendarModal(false)}
-              className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
-            >
+              className="absolute top-4 right-4 text-gray-500 hover:text-gray-700">
               <XMarkIcon className="w-6 h-6" />
             </button>
             <h3 className="text-xl font-semibold mb-4">
@@ -234,12 +227,13 @@ export default function UserGroundDetails() {
           <div className="bg-white rounded-2xl w-11/12 max-w-md p-6 relative">
             <button
               onClick={() => setShowPaymentModal(false)}
-              className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
-            >
+              className="absolute top-4 right-4 text-gray-500 hover:text-gray-700">
               <XMarkIcon className="w-6 h-6" />
             </button>
             <PaymentForm
               bookingDetails={{
+                groundId: id,
+                sportName: selectedSport || "",
                 groundName: ground.name,
                 location: ground.location.address,
                 date: bookingDetails.date,
