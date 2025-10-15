@@ -15,9 +15,7 @@ interface BookingInput {
   paymentStatus: "advanced_paid" | "full_paid";
 }
 
-// Helper function to generate 30-minute slots
-
-// Helper function to generate 30-minute slots
+// ✅ Helper function to generate 30-minute slots
 function generateTimeSlots(from: string, to: string) {
   const slots: string[] = [];
   const [fromH, fromM] = from.split(":").map(Number);
@@ -35,7 +33,6 @@ function generateTimeSlots(from: string, to: string) {
     next.setMinutes(next.getMinutes() + 30);
 
     const format = (d: Date) => d.toTimeString().slice(0, 5); // "HH:mm"
-
     slots.push(`${format(current)}-${format(next)}`);
     current.setMinutes(current.getMinutes() + 30);
   }
@@ -44,7 +41,6 @@ function generateTimeSlots(from: string, to: string) {
 }
 
 // ✅ CREATE Booking
-// api/booking/route.ts
 export async function POST(req: Request) {
   try {
     await dbConnect();
@@ -52,7 +48,6 @@ export async function POST(req: Request) {
 
     // 1️⃣ Find Ground
     const ground = await Ground.findById(body.ground);
-    console.log(body.guest);
     if (!ground)
       return NextResponse.json({ error: "Ground not found" }, { status: 404 });
 
@@ -91,7 +86,7 @@ export async function POST(req: Request) {
       sportName: body.sportName,
       guest: body.guest,
       date: body.date,
-      timeSlots: body.timeSlots,
+      timeSlots: body.timeSlots, // e.g. [{ startTime: "08:00-08:30" }]
       totalAmount,
       paymentStatus,
       status: "reserved",
@@ -100,7 +95,7 @@ export async function POST(req: Request) {
     return NextResponse.json({
       success: true,
       bookingId: booking._id,
-      amount: totalAmount, // secure amount
+      amount: totalAmount,
     });
   } catch (err) {
     console.error("Booking Creation Error:", err);
@@ -144,18 +139,18 @@ export async function GET(req: Request) {
     // Flatten booked slots from all bookings
     const bookedSet = new Set(
       bookings.flatMap((b) =>
-        b.timeSlots.map((ts: { startTime: any }) => ts.startTime)
+        b.timeSlots.map((ts: { startTime: string }) => ts.startTime)
       )
     );
 
+    console.log("Booked Slots in DB:", [...bookedSet]);
+    console.log("Generated Slots:", timeSlots);
+
     // 🟢 Build Response with slot status
-    const response = timeSlots.map((slot) => {
-      const startTime = slot.split("-")[0];
-      return {
-        timeSlot: slot,
-        status: bookedSet.has(startTime) ? "booked" : "available",
-      };
-    });
+    const response = timeSlots.map((slot) => ({
+      timeSlot: slot,
+      status: bookedSet.has(slot) ? "booked" : "available",
+    }));
 
     return NextResponse.json(response);
   } catch (err: any) {
