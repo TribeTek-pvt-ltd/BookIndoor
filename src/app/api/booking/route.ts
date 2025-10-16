@@ -143,8 +143,8 @@ export async function GET(req: Request) {
       )
     );
 
-    console.log("Booked Slots in DB:", [...bookedSet]);
-    console.log("Generated Slots:", timeSlots);
+    // console.log("Booked Slots in DB:", [...bookedSet]);
+    // console.log("Generated Slots:", timeSlots);
 
     // 🟢 Build Response with slot status
     const response = timeSlots.map((slot) => ({

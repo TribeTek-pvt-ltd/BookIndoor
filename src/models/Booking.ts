@@ -56,7 +56,6 @@ const BookingSchema = new Schema<IBooking>(
   },
   { timestamps: true }
 );
-console.log("Booking model compiled", BookingSchema);
 
 export default mongoose.models.Booking ||
   mongoose.model<IBooking>("Booking", BookingSchema);
