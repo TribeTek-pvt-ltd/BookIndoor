@@ -2,11 +2,16 @@
 
 import { useEffect, useState } from "react";
 
+interface Slot {
+  timeSlot: string;
+  status: "available" | "booked";
+}
+
 interface CalendarProps {
   groundId: string;
   groundName?: string;
   isAdmin?: boolean;
-  onSlotClick?: (date: string, times: string[]) => void; // updated type
+  onSlotClick?: (date: string, times: string[]) => void;
 }
 
 const daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -19,44 +24,50 @@ export default function Calendar({
 }: CalendarProps) {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
-  const [bookedSlots, setBookedSlots] = useState<string[]>([]);
+  const [slots, setSlots] = useState<Slot[]>([]);
   const [selectedTimes, setSelectedTimes] = useState<string[]>([]);
   const [showTimePicker, setShowTimePicker] = useState(false);
 
-  // fetch booked slots
+  // ✅ Fetch available slots for selected date
   useEffect(() => {
-    const fetchBooked = async () => {
+    const fetchSlots = async () => {
       if (!selectedDate) return;
       try {
-        const res = await fetch(`/api/booking?ground=${groundId}&date=${selectedDate}`);
+        const res = await fetch(
+          `/api/booking?ground=${groundId}&date=${selectedDate}`
+        );
         const data = await res.json();
         if (Array.isArray(data)) {
-          const slots = data.flatMap((b) => b.timeSlots);
-          setBookedSlots(slots);
+          setSlots(data);
         } else {
-          setBookedSlots([]);
+          setSlots([]);
         }
       } catch (err) {
-        console.error("Failed to load bookings", err);
-        setBookedSlots([]);
+        console.error("Failed to load slots", err);
+        setSlots([]);
       }
     };
-    fetchBooked();
+    fetchSlots();
   }, [selectedDate, groundId]);
 
-  const generateSlots = () => {
-    const slots: string[] = [];
-    for (let hour = 9; hour <= 23; hour++) {
-      slots.push(`${hour.toString().padStart(2, "0")}:00`);
-    }
-    return slots;
+  // ✅ Toggle selected slot
+  const toggleSlot = (timeSlot: string) => {
+    setSelectedTimes((prev) =>
+      prev.includes(timeSlot)
+        ? prev.filter((s) => s !== timeSlot)
+        : [...prev, timeSlot]
+    );
   };
-  const slots = generateSlots();
 
+  // ✅ Calendar navigation
   const prevMonth = () =>
-    setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1));
+    setCurrentDate(
+      new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1)
+    );
   const nextMonth = () =>
-    setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1));
+    setCurrentDate(
+      new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1)
+    );
 
   const generateCalendar = () => {
     const year = currentDate.getFullYear();
@@ -69,13 +80,20 @@ export default function Calendar({
   };
   const calendarDays = generateCalendar();
 
-  const toggleSlot = (slot: string) => {
-    setSelectedTimes((prev) =>
-      prev.includes(slot) ? prev.filter((s) => s !== slot) : [...prev, slot]
+  const isPastDate = (day: number) => {
+    const today = new Date();
+    const date = new Date(
+      currentDate.getFullYear(),
+      currentDate.getMonth(),
+      day
+    );
+    return (
+      date < new Date(today.getFullYear(), today.getMonth(), today.getDate())
     );
   };
 
   const handleDateClick = (day: number) => {
+    if (isPastDate(day)) return; // ❌ prevent selecting past days
     const yyyy = currentDate.getFullYear();
     const mm = (currentDate.getMonth() + 1).toString().padStart(2, "0");
     const dd = day.toString().padStart(2, "0");
@@ -84,46 +102,71 @@ export default function Calendar({
     setShowTimePicker(true);
   };
 
+  const isPastTime = (slot: string) => {
+    const now = new Date();
+    if (!selectedDate) return false;
+
+    const todayStr = now.toISOString().split("T")[0];
+    if (selectedDate !== todayStr) return false;
+
+    const [hour, minute] = slot.split("-")[0].split(":").map(Number);
+    const slotDate = new Date(selectedDate);
+    slotDate.setHours(hour, minute, 0, 0);
+    return slotDate < now;
+  };
+
   const handleConfirm = () => {
     if (!selectedTimes.length) {
       alert("Please select at least one time slot.");
       return;
     }
     if (selectedDate && onSlotClick) {
-      onSlotClick(selectedDate, selectedTimes); // pass data to parent
+      onSlotClick(selectedDate, selectedTimes);
     }
   };
 
   return (
     <div className="mt-6">
+      {/* Calendar View */}
       {!showTimePicker && (
         <>
           <div className="flex justify-between mb-4">
-            <button onClick={prevMonth}>Prev</button>
-            <span>
-              {currentDate.toLocaleString("default", { month: "long" })} {currentDate.getFullYear()}
+            <button onClick={prevMonth} className="px-2 py-1 border rounded">
+              Prev
+            </button>
+            <span className="font-semibold">
+              {currentDate.toLocaleString("default", { month: "long" })}{" "}
+              {currentDate.getFullYear()}
             </span>
-            <button onClick={nextMonth}>Next</button>
+            <button onClick={nextMonth} className="px-2 py-1 border rounded">
+              Next
+            </button>
           </div>
 
           <div className="grid grid-cols-7 gap-2 text-center">
             {daysOfWeek.map((day) => (
-              <div key={day}>{day}</div>
+              <div key={day} className="font-semibold">
+                {day}
+              </div>
             ))}
             {calendarDays.map((day, idx) =>
               day ? (
                 <button
                   key={idx}
                   onClick={() => handleDateClick(day)}
-                  className={`px-2 py-1 rounded-lg ${
-                    selectedDate ===
-                    `${currentDate.getFullYear()}-${(currentDate.getMonth() + 1)
-                      .toString()
-                      .padStart(2, "0")}-${day.toString().padStart(2, "0")}`
+                  disabled={isPastDate(day)}
+                  className={`px-2 py-1 rounded-lg transition ${
+                    isPastDate(day)
+                      ? "bg-gray-200 text-gray-500 cursor-not-allowed"
+                      : selectedDate ===
+                        `${currentDate.getFullYear()}-${(
+                          currentDate.getMonth() + 1
+                        )
+                          .toString()
+                          .padStart(2, "0")}-${day.toString().padStart(2, "0")}`
                       ? "bg-green-500 text-white"
                       : "hover:bg-green-100"
-                  }`}
-                >
+                  }`}>
                   {day}
                 </button>
               ) : (
@@ -134,36 +177,51 @@ export default function Calendar({
         </>
       )}
 
+      {/* Time Picker View */}
       {showTimePicker && selectedDate && (
         <div className="bg-gray-50 rounded-lg p-4">
-          <h4 className="text-lg font-semibold mb-3">Select Time for {selectedDate}</h4>
+          <h4 className="text-lg font-semibold mb-3">
+            Select Time for {selectedDate}
+          </h4>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
-            {slots.map((slot) => {
-              const isBooked = bookedSlots.includes(slot);
-              const isSelected = selectedTimes.includes(slot);
+            {slots.map(({ timeSlot, status }) => {
+              const isSelected = selectedTimes.includes(timeSlot);
+              const isBooked = status === "booked";
+              const pastTime = isPastTime(timeSlot);
+
               return (
                 <button
-                  key={slot}
-                  onClick={() => (!isBooked ? toggleSlot(slot) : null)}
-                  disabled={isBooked}
-                  className={`px-3 py-2 rounded-lg ${
+                  key={timeSlot}
+                  onClick={() =>
+                    !isBooked && !pastTime ? toggleSlot(timeSlot) : null
+                  }
+                  disabled={isBooked || pastTime}
+                  className={`px-3 py-2 rounded-lg text-sm transition ${
                     isBooked
-                      ? "bg-red-600 text-white opacity-70"
+                      ? "bg-red-600 text-white opacity-70 cursor-not-allowed"
+                      : pastTime
+                      ? "bg-gray-300 text-gray-600 cursor-not-allowed"
                       : isSelected
                       ? "bg-green-600 text-white"
-                      : "bg-white"
-                  }`}
-                >
-                  {slot}
+                      : "bg-white hover:bg-green-100 border"
+                  }`}>
+                  {timeSlot}
                 </button>
               );
             })}
           </div>
-          <div className="flex justify-end mt-4">
+          <div className="flex justify-end mt-4 space-x-2">
+            <button
+              onClick={() => {
+                setShowTimePicker(false);
+                setSelectedDate(null);
+              }}
+              className="px-4 py-2 bg-gray-300 rounded-lg">
+              Back
+            </button>
             <button
               onClick={handleConfirm}
-              className="px-4 py-2 bg-green-600 text-white rounded-lg"
-            >
+              className="px-4 py-2 bg-green-600 text-white rounded-lg">
               Confirm Booking
             </button>
           </div>
