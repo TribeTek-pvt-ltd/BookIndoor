@@ -1,30 +1,41 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import dbConnect from "@/lib/mongodb";
 import Ground from "@/models/Grounds";
 import { verifyToken } from "@/lib/auth";
 
+type Params = { params: { id: string } };
+
+/** ✅ GET GROUND BY ID **/
 export async function GET(
-  req: Request,
-  { params }: { params: { id: string } }
+  req: NextRequest,
+  context: Params | { params: Promise<{ id: string }> }
 ) {
   try {
     await dbConnect();
-    const { id } = params;
+
+    // 👇 Fix the type issue
+    const { id } =
+      context.params instanceof Promise ? await context.params : context.params;
+
     const url = new URL(req.url);
     const token = url.searchParams.get("token");
     const decoded = token ? verifyToken(token) : null;
+
     let ground: any;
+
     if (
       decoded &&
       (["admin", "super_admin"].includes(decoded.role) ||
-        decoded.id === String(ground?.owner._id))
+        decoded.id === String(ground?.owner?._id))
     ) {
       ground = await Ground.findById(id).populate("owner", "name email role");
     } else {
       ground = await Ground.findById(id);
     }
-    if (!ground)
+
+    if (!ground) {
       return NextResponse.json({ error: "Ground not found" }, { status: 404 });
+    }
 
     if (
       decoded &&
@@ -42,6 +53,7 @@ export async function GET(
       availableTime: ground.availableTime,
       amenities: ground.amenities,
     };
+
     return NextResponse.json(publicGround);
   } catch (err: any) {
     console.error("Get Ground by ID Error:", err);
@@ -52,13 +64,17 @@ export async function GET(
   }
 }
 
+/** ✅ UPDATE GROUND **/
 export async function PUT(
-  req: Request,
-  { params }: { params: { id: string } }
+  req: NextRequest,
+  context: Params | { params: Promise<{ id: string }> }
 ) {
   try {
     await dbConnect();
-    const { id } = params;
+
+    const { id } =
+      context.params instanceof Promise ? await context.params : context.params;
+
     const body = await req.json();
     const decoded = verifyToken(body.token);
     if (!decoded)
@@ -91,15 +107,18 @@ export async function PUT(
   }
 }
 
+/** ✅ DELETE GROUND **/
 export async function DELETE(
-  req: Request,
-  { params }: { params: { id: string } }
+  req: NextRequest,
+  context: Params | { params: Promise<{ id: string }> }
 ) {
   try {
     await dbConnect();
-    const { id } = params;
-    const { token } = await req.json();
 
+    const { id } =
+      context.params instanceof Promise ? await context.params : context.params;
+
+    const { token } = await req.json();
     const decoded = verifyToken(token);
     if (!decoded)
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 });

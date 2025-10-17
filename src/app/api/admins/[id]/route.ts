@@ -1,34 +1,37 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import dbConnect from "@/lib/mongodb";
 import { verifyToken } from "@/lib/auth";
 import User from "@/models/User";
-import Ground from "@/models/Grounds"; // only if you want their grounds too
+import Ground from "@/models/Grounds";
+
+type Params = {
+  params: { id: string };
+};
 
 export async function GET(
-  req: Request,
-  { params }: { params: { id: string } }
+  req: NextRequest,
+  context: Params | { params: Promise<{ id: string }> } // 👈 accept both
 ) {
   try {
+    // ✅ Fix TypeScript issue by normalizing params
+    const paramsData =
+      context.params instanceof Promise ? await context.params : context.params;
+
+    const { id } = paramsData;
+
     await dbConnect();
-    const { id } = params;
 
-    // ✅ Get token from query
-    const url = new URL(req.url);
-    const token = url.searchParams.get("token");
-
+    const token = new URL(req.url).searchParams.get("token");
     if (!token) {
       return NextResponse.json({ error: "Token required" }, { status: 401 });
     }
 
     const decoded = verifyToken(token);
-
     if (!decoded || decoded.role !== "super_admin") {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    // ✅ Fetch the admin user by ID
-    const admin = await User.findById(id).select("-passwordHash"); // hide password
-
+    const admin = await User.findById(id).select("-passwordHash");
     if (!admin) {
       return NextResponse.json({ error: "Admin not found" }, { status: 404 });
     }
@@ -40,15 +43,11 @@ export async function GET(
       );
     }
 
-    // ✅ Optionally fetch all grounds owned by this admin
     const grounds = await Ground.find({ owner: id }).select(
       "name location sports images"
     );
 
-    return NextResponse.json({
-      admin,
-      grounds,
-    });
+    return NextResponse.json({ admin, grounds });
   } catch (err) {
     console.error("Get Admin Data Error:", err);
     return NextResponse.json(
