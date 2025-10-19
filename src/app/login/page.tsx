@@ -31,18 +31,18 @@ export default function LoginPage() {
         return;
       }
 
-      // ✅ Save token and user info (localStorage or cookies)
+      // ✅ Save token and user info
       localStorage.setItem("token", data.token);
       localStorage.setItem("user", data.user.role);
       localStorage.setItem("id", data.user._id);
 
-      // Redirect based on role
+      // ✅ Redirect based on role
       if (data.user.role === "admin") {
         router.push("/admin");
       } else if (data.user.role === "super_admin") {
         router.push("/superadmin");
       } else {
-        router.push("/"); // Default route
+        router.push("/");
       }
     } catch (err) {
       console.error(err);
@@ -95,17 +95,19 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-3 bg-green-700 text-white rounded-xl font-semibold hover:bg-green-800 transition shadow-md">
+            className="w-full py-3 bg-green-700 text-white rounded-xl font-semibold hover:bg-green-800 transition shadow-md"
+          >
             {loading ? "Logging in..." : "Login"}
           </button>
         </form>
 
         <div className="text-center mt-4 sm:mt-6">
           <p className="text-green-900 text-sm sm:text-base">
-            Don't have an account?{" "}
+            Don&apos;t have an account?{" "}
             <a
               href="/signup"
-              className="text-green-700 font-medium hover:underline">
+              className="text-green-700 font-medium hover:underline"
+            >
               Sign Up
             </a>
           </p>

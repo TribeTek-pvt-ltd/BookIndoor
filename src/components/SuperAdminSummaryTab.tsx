@@ -2,6 +2,14 @@
 
 import { useEffect, useState } from "react";
 
+// Define a proper interface for ground-wise stats
+interface GroundStat {
+  groundId: string;
+  groundName: string;
+  totalBookings: number;
+  totalRevenue: number;
+}
+
 interface StatsResponse {
   role: "super_admin" | "admin";
   totalAdmins?: number;
@@ -10,7 +18,7 @@ interface StatsResponse {
   totalBookings: number;
   monthlyBookings?: number;
   weeklyBookings?: number;
-  groundWiseStats?: any[];
+  groundWiseStats?: GroundStat[];
 }
 
 export default function SuperAdminSummaryTab() {
@@ -30,7 +38,7 @@ export default function SuperAdminSummaryTab() {
           },
         });
 
-        const data = await res.json();
+        const data: StatsResponse = await res.json();
         setStats(data);
       } catch (err) {
         console.error("Error fetching stats:", err);
@@ -98,7 +106,8 @@ export default function SuperAdminSummaryTab() {
       {summaryCards.map((card, idx) => (
         <div
           key={idx}
-          className="bg-white p-6 rounded-xl  hover:shadow-lg transition cursor-default">
+          className="bg-white p-6 rounded-xl hover:shadow-lg transition cursor-default"
+        >
           <h3 className="text-lg font-semibold text-gray-800 mb-2">
             {card.title}
           </h3>

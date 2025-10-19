@@ -20,7 +20,9 @@ export default function GroundFilter({
     sport: "",
   });
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
     const { name, value } = e.target;
     const newFilters = { ...filters, [name]: value };
     setFilters(newFilters);
@@ -34,7 +36,7 @@ export default function GroundFilter({
   };
 
   return (
-    <div className="w-xl bg-white p-6 rounded-2xl  mb-24">
+    <div className="w-xl bg-white p-6 rounded-2xl mb-24">
       <h2 className="text-xl font-semibold mb-4 text-green-800">
         Filter Grounds
       </h2>

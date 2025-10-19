@@ -11,10 +11,16 @@ interface BookingSummary {
   sportName: string;
 }
 
+interface BookingResponse {
+  bookingId: string;
+  message?: string;
+  error?: string;
+}
+
 interface PaymentFormProps {
   bookingDetails: BookingSummary;
   amount: number;
-  onPaymentSuccess?: (data: any) => void;
+  onPaymentSuccess?: (data: BookingResponse) => void;
 }
 
 export default function PaymentForm({
@@ -40,7 +46,7 @@ export default function PaymentForm({
 
   const toggleAdvancePayment = () => setIsAdvance((prev) => !prev);
 
-  const handleBooking = async (e: React.FormEvent) => {
+  const handleBooking = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     if (!userDetails.name || !userDetails.phone || !userDetails.nic) {
@@ -53,9 +59,7 @@ export default function PaymentForm({
     try {
       const response = await fetch("/api/booking", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ground: bookingDetails.groundId,
           sportName: bookingDetails.sportName,
@@ -70,7 +74,7 @@ export default function PaymentForm({
         }),
       });
 
-      const data = await response.json();
+      const data: BookingResponse = await response.json();
 
       if (!response.ok) {
         alert(data.error || "Booking failed!");

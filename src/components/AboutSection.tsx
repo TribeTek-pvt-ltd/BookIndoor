@@ -18,8 +18,8 @@ export default function AboutSection() {
         transition={{ duration: 0.8 }}
         className="max-w-3xl mx-auto text-lg text-green-200 leading-relaxed"
       >
-        BookIndoor is your all-in-one platform for discovering and booking indoor sports facilities. 
-        Whether you're looking for a badminton court, a futsal arena, or a basketball hall — 
+        BookIndoor is your all-in-one platform for discovering and booking indoor sports facilities.{" "}
+        Whether you&apos;re looking for a badminton court, a futsal arena, or a basketball hall —{" "}
         we connect players with venues effortlessly. Experience a smoother, faster, and smarter way to play.
       </motion.p>
     </section>

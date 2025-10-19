@@ -1,4 +1,7 @@
+"use client";
+
 import Link from "next/link";
+import Image from "next/image";
 
 export interface Ground {
   id: number;
@@ -15,17 +18,20 @@ interface GroundCardProps {
   role?: "Admin" | "User" | "SuperAdmin";
 }
 
-export default function GroundCard({ ground, role = "User" }: GroundCardProps) {
+export default function GroundCard({ ground }: GroundCardProps) {
   const link = `/user/ground/${ground.id}`;
 
   return (
     <div className="bg-white rounded-2xl shadow-lg overflow-hidden w-full max-w-[400px]">
       {/* Image */}
       <div className="relative w-full h-56">
-        <img
+        <Image
           src={ground.image}
           alt={ground.name}
-          className="w-full h-full object-cover"
+          fill
+          className="object-cover"
+          sizes="(max-width: 768px) 100vw, 400px"
+          priority
         />
         <div className="absolute bottom-0 left-0 w-full bg-gradient-to-t from-black/60 to-transparent p-4">
           <h3 className="text-white text-xl font-bold truncate">{ground.name}</h3>
@@ -43,7 +49,8 @@ export default function GroundCard({ ground, role = "User" }: GroundCardProps) {
             {ground.sports.map((sport) => (
               <span
                 key={sport}
-                className="text-xs font-semibold bg-green-100 text-green-800 px-3 py-1 rounded-full">
+                className="text-xs font-semibold bg-green-100 text-green-800 px-3 py-1 rounded-full"
+              >
                 {sport}
               </span>
             ))}
@@ -56,7 +63,8 @@ export default function GroundCard({ ground, role = "User" }: GroundCardProps) {
             {ground.facilities.map((facility) => (
               <span
                 key={facility}
-                className="text-xs font-medium bg-gray-100 text-gray-800 px-2 py-1 rounded-full flex items-center gap-1">
+                className="text-xs font-medium bg-gray-100 text-gray-800 px-2 py-1 rounded-full flex items-center gap-1"
+              >
                 {facility === "Wi-Fi" && "📶"}
                 {facility === "Parking" && "🅿️"}
                 {facility === "Cafeteria" && "☕"}
@@ -71,7 +79,8 @@ export default function GroundCard({ ground, role = "User" }: GroundCardProps) {
         <div className="flex justify-center mt-4">
           <Link
             href={link}
-            className="px-6 py-2 bg-green-600 text-white font-semibold rounded-lg shadow hover:bg-green-700 transition">
+            className="px-6 py-2 bg-green-600 text-white font-semibold rounded-lg shadow hover:bg-green-700 transition"
+          >
             View Details
           </Link>
         </div>

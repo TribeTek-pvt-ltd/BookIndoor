@@ -1,11 +1,12 @@
 "use client";
 
-import { useState, useEffect, Key } from "react";
+import { useState, useEffect, Key, useCallback } from "react";
 import AddAdminForm from "./AddAdminForm";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 
 interface Admin {
-  id: Key | null | undefined;
+  id?: Key | null;
   _id: string;
   name: string;
   email: string;
@@ -24,14 +25,22 @@ export default function AdminTab() {
   const [showAddForm, setShowAddForm] = useState(false);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
+  const [token, setToken] = useState("");
 
-  const token = localStorage.getItem("token") || "";
+  // Safely fetch token from localStorage (client-side only)
+  useEffect(() => {
+    const storedToken = localStorage.getItem("token") || "";
+    setToken(storedToken);
+  }, []);
+
   // Fetch all admins from backend
-  const fetchAdmins = async () => {
+  const fetchAdmins = useCallback(async () => {
+    if (!token) return;
     try {
       setLoading(true);
       const res = await fetch(`/api/auth?token=${token}`);
       const data = await res.json();
+
       if (res.ok) {
         setAdmins(data.admins || []);
       } else {
@@ -42,16 +51,15 @@ export default function AdminTab() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [token]);
 
   useEffect(() => {
     fetchAdmins();
-  }, []);
+  }, [fetchAdmins]);
 
   // Handle adding new admin
-  const handleAddAdmin = async (newAdminData: any) => {
+  const handleAddAdmin = async (newAdminData: Omit<Admin, "_id">) => {
     try {
-      // Send to backend
       const res = await fetch("/api/auth/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -60,7 +68,6 @@ export default function AdminTab() {
       const data = await res.json();
 
       if (res.ok) {
-        // Update frontend state
         setAdmins((prev) => [...prev, data]);
         setShowAddForm(false);
       } else {
@@ -78,7 +85,7 @@ export default function AdminTab() {
   };
 
   return (
-    <div className=" space-y-6 relative w-full max-w-full mx-auto px-3 sm:px-6 mb-10">
+    <div className="space-y-6 relative w-full max-w-full mx-auto px-3 sm:px-6 mb-10">
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <h2 className="text-xl sm:text-2xl font-semibold text-gray-800">
@@ -86,13 +93,14 @@ export default function AdminTab() {
         </h2>
         <button
           onClick={() => setShowAddForm(true)}
-          className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition w-full sm:w-auto text-center">
+          className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition w-full sm:w-auto text-center"
+        >
           Add Admin
         </button>
       </div>
 
       {/* Admin List */}
-      <div className="bg-white p-4 rounded-lg  overflow-x-auto">
+      <div className="bg-white p-4 rounded-lg overflow-x-auto">
         <h3 className="text-lg font-semibold mb-4">All Admins</h3>
         {loading ? (
           <p className="text-gray-500 text-center py-8">Loading admins...</p>
@@ -112,13 +120,17 @@ export default function AdminTab() {
                 <tr
                   key={admin._id}
                   onClick={() => handleViewProfile(admin._id)}
-                  className="hover:bg-gray-50 cursor-pointer transition">
+                  className="hover:bg-gray-50 cursor-pointer transition"
+                >
                   <td className="p-3 border-b">
-                    <img
-                      src={admin.image || "/default-avatar.png"}
-                      alt={admin.name}
-                      className="w-10 h-10 sm:w-12 sm:h-12 rounded-full object-cover"
-                    />
+                    <div className="relative w-12 h-12">
+                      <Image
+                        src={admin.image || "/default-avatar.png"}
+                        alt={admin.name}
+                        fill
+                        className="rounded-full object-cover"
+                      />
+                    </div>
                   </td>
                   <td className="p-3 border-b font-medium">{admin.name}</td>
                   <td className="p-3 border-b">{admin.email}</td>
@@ -135,7 +147,8 @@ export default function AdminTab() {
           <div className="bg-white/20 backdrop-blur-md border border-white/30 shadow-2xl p-5 sm:p-6 rounded-2xl w-full max-w-md relative overflow-y-auto max-h-[90vh]">
             <button
               onClick={() => setShowAddForm(false)}
-              className="absolute top-3 right-3 text-white bg-red-500 hover:bg-red-600 rounded-full p-1 px-2 text-sm transition">
+              className="absolute top-3 right-3 text-white bg-red-500 hover:bg-red-600 rounded-full p-1 px-2 text-sm transition"
+            >
               ✕
             </button>
             <h3 className="text-lg sm:text-xl font-semibold text-white mb-4 text-center">
