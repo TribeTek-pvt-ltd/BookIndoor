@@ -1,9 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import dbConnect from "@/lib/mongodb";
-import Ground from "@/models/Grounds";
+import Ground, { IGround } from "@/models/Grounds";
 import { verifyToken } from "@/lib/auth";
 
 type Params = { params: { id: string } };
+
+// Define a safe error interface
+interface AppError extends Error {
+  name: string;
+  errors?: Record<string, unknown>;
+}
 
 /** ✅ GET GROUND BY ID **/
 export async function GET(
@@ -13,7 +19,6 @@ export async function GET(
   try {
     await dbConnect();
 
-    // 👇 Fix the type issue
     const { id } =
       context.params instanceof Promise ? await context.params : context.params;
 
@@ -21,14 +26,14 @@ export async function GET(
     const token = url.searchParams.get("token");
     const decoded = token ? verifyToken(token) : null;
 
-    let ground: any;
+    let ground: IGround | null = null;
 
-    if (
-      decoded &&
-      (["admin", "super_admin"].includes(decoded.role) ||
-        decoded.id === String(ground?.owner?._id))
-    ) {
-      ground = await Ground.findById(id).populate("owner", "name email role");
+    if (decoded) {
+      if (["admin", "super_admin"].includes(decoded.role)) {
+        ground = await Ground.findById(id).populate("owner", "name email role");
+      } else {
+        ground = await Ground.findById(id);
+      }
     } else {
       ground = await Ground.findById(id);
     }
@@ -40,7 +45,7 @@ export async function GET(
     if (
       decoded &&
       (["admin", "super_admin"].includes(decoded.role) ||
-        decoded.id === String(ground.owner._id))
+        decoded.id === String(ground.owner?._id))
     ) {
       return NextResponse.json(ground);
     }
@@ -55,7 +60,7 @@ export async function GET(
     };
 
     return NextResponse.json(publicGround);
-  } catch (err: any) {
+  } catch (err) {
     console.error("Get Ground by ID Error:", err);
     return NextResponse.json(
       { error: "Failed to fetch ground" },
@@ -95,10 +100,11 @@ export async function PUT(
     await ground.save();
 
     return NextResponse.json({ success: true, ground });
-  } catch (err: any) {
-    console.error("Ground Update Error:", err);
-    if (err.name === "ValidationError") {
-      return NextResponse.json({ error: err.errors }, { status: 400 });
+  } catch (err) {
+    const error = err as AppError;
+    console.error("Ground Update Error:", error);
+    if (error.name === "ValidationError") {
+      return NextResponse.json({ error: error.errors }, { status: 400 });
     }
     return NextResponse.json(
       { error: "Failed to update ground" },
@@ -136,7 +142,7 @@ export async function DELETE(
 
     await ground.deleteOne();
     return NextResponse.json({ success: true, message: "Ground deleted" });
-  } catch (err: any) {
+  } catch (err) {
     console.error("Ground Delete Error:", err);
     return NextResponse.json(
       { error: "Failed to delete ground" },
