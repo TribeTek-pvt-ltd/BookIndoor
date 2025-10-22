@@ -5,6 +5,18 @@ import Ground from "@/models/Grounds";
 import Booking from "@/models/Booking";
 import { verifyToken } from "@/lib/auth";
 
+interface DecodedToken {
+  id: string;
+  role: "super_admin" | "admin";
+}
+
+interface GroundStat {
+  groundId: string;
+  groundName: string;
+  totalBookings: number;
+  totalRevenue: number;
+}
+
 export async function GET(req: Request) {
   try {
     await dbConnect();
@@ -15,7 +27,7 @@ export async function GET(req: Request) {
     }
 
     const token = authHeader.split(" ")[1];
-    const decoded: any = verifyToken(token);
+    const decoded = verifyToken(token) as DecodedToken | null;
     if (!decoded) {
       return NextResponse.json({ error: "Invalid token" }, { status: 401 });
     }
@@ -35,7 +47,7 @@ export async function GET(req: Request) {
     let totalBookings = 0;
     let monthlyBookings = 0;
     let weeklyBookings = 0;
-    let groundWiseStats: any[] = [];
+    let groundWiseStats: GroundStat[] = [];
 
     if (userRole === "super_admin") {
       totalGrounds = await Ground.countDocuments();
@@ -43,7 +55,7 @@ export async function GET(req: Request) {
       totalBookings = await Booking.countDocuments();
 
       // total revenue
-      const revenueAgg = await Booking.aggregate([
+      const revenueAgg = await Booking.aggregate<{ _id: null; total: number }>([
         { $match: { paymentStatus: "fully_paid" } },
         { $group: { _id: null, total: { $sum: "$totalAmount" } } },
       ]);
@@ -60,7 +72,7 @@ export async function GET(req: Request) {
       });
 
       // ground wise stats
-      groundWiseStats = await Booking.aggregate([
+      groundWiseStats = await Booking.aggregate<GroundStat>([
         {
           $group: {
             _id: "$ground",
@@ -98,9 +110,7 @@ export async function GET(req: Request) {
     }
 
     if (userRole === "admin") {
-      // get only grounds owned by this admin
       const ownedGrounds = await Ground.find({ owner: userId }).select("_id");
-
       const ownedGroundIds = ownedGrounds.map((g) => g._id);
       totalGrounds = ownedGrounds.length;
 
@@ -108,7 +118,7 @@ export async function GET(req: Request) {
         ground: { $in: ownedGroundIds },
       });
 
-      const revenueAgg = await Booking.aggregate([
+      const revenueAgg = await Booking.aggregate<{ _id: null; total: number }>([
         {
           $match: {
             ground: { $in: ownedGroundIds },
@@ -130,7 +140,7 @@ export async function GET(req: Request) {
       weeklyBookings,
       groundWiseStats,
     });
-  } catch (err) {
+  } catch (err: unknown) {
     console.error("Stats Error:", err);
     return NextResponse.json(
       { error: "Failed to fetch stats" },
