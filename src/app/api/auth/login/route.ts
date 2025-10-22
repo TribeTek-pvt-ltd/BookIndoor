@@ -26,8 +26,15 @@ export async function POST(req: Request) {
 
     const token = createToken({ id: String(user._id), role: user.role });
     return NextResponse.json({ token, user });
-  } catch (err: any) {
-    console.error("Login Error:", err);
-    return NextResponse.json({ error: "Server error" }, { status: 500 });
+  } catch (err: unknown) {
+    // ✅ Safe error handling with proper type narrowing
+    const message =
+      err instanceof Error ? err.message : "An unexpected error occurred";
+    console.error("Login Error:", message);
+
+    return NextResponse.json(
+      { error: "Server error", details: message },
+      { status: 500 }
+    );
   }
 }
