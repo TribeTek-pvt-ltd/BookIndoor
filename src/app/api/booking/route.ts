@@ -45,6 +45,7 @@ export async function POST(req: Request) {
   try {
     await dbConnect();
     const body: BookingInput = await req.json();
+    console.log("Booked Slots in DB:", [...body.timeSlots]);
 
     // 1️⃣ Find Ground
     const ground = await Ground.findById(body.ground);

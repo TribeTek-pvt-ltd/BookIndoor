@@ -30,18 +30,14 @@ export default function Calendar({
 
   // ✅ Fetch available slots for selected date
   useEffect(() => {
+    if (!selectedDate || !groundId) return;
     const fetchSlots = async () => {
-      if (!selectedDate) return;
       try {
         const res = await fetch(
           `/api/booking?ground=${groundId}&date=${selectedDate}`
         );
         const data = await res.json();
-        if (Array.isArray(data)) {
-          setSlots(data);
-        } else {
-          setSlots([]);
-        }
+        setSlots(Array.isArray(data) ? data : []);
       } catch (err) {
         console.error("Failed to load slots", err);
         setSlots([]);

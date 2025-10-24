@@ -1,6 +1,6 @@
 "use client";
 
-import AddGroundForm from "../../../components/AddGroundForm";
+import AddGroundForm from "@/components/AddGroundForm";
 
 export default function AddGroundPage() {
   return (
