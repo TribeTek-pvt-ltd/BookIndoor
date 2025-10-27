@@ -13,6 +13,15 @@ interface Stats {
 
 type TabType = "grounds" | "summary" | "details";
 
+// Backend response type for grounds
+interface BackendGround {
+  _id: string;
+  name: string;
+  location: { address?: string } | string;
+  images?: string[];
+  sports?: { name: string }[];
+}
+
 export default function AdminPage() {
   const [grounds, setGrounds] = useState<Ground[]>([]);
   const [, setStats] = useState<Stats>({
@@ -49,7 +58,7 @@ export default function AdminPage() {
 
         if (!response.ok) throw new Error("Failed to fetch stats");
 
-        const data = await response.json();
+        const data: Stats = await response.json();
         setStats({
           totalAdmins: data.totalAdmins || 0,
           totalGrounds: data.totalGrounds || 0,
@@ -70,7 +79,6 @@ export default function AdminPage() {
       try {
         const token = localStorage.getItem("token");
 
-        // Call the backend API with token
         const response = await fetch("/api/grounds", {
           headers: {
             "Content-Type": "application/json",
@@ -80,19 +88,21 @@ export default function AdminPage() {
 
         if (!response.ok) throw new Error("Failed to fetch grounds");
 
-        const data = await response.json();
+        const data: BackendGround[] = await response.json();
 
-        // Normalize backend response to match Ground interface
-        const mappedGrounds: Ground[] = data.map((g: any) => ({
-          id: g._id, // _id → id
-          name: g.name,
-          location:
-            typeof g.location === "string"
-              ? g.location
-              : g.location?.address || "Unknown",
-          image: g.images?.[0] || "/placeholder.png",
-          sports: g.sports?.map((s: any) => s.name) || [],
-        }));
+        const mappedGrounds: Ground[] = data.map((g: BackendGround) => {
+          const idNumber = Number(g._id);
+          return {
+            id: isNaN(idNumber) ? 0 : idNumber,
+            name: g.name,
+            location:
+              typeof g.location === "string"
+                ? g.location
+                : g.location?.address || "Unknown",
+            image: g.images?.[0] || "/placeholder.png",
+            sports: g.sports?.map((s) => s.name) || [],
+          };
+        });
 
         setGrounds(mappedGrounds);
       } catch (err) {

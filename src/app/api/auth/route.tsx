@@ -24,17 +24,11 @@ export async function POST(req: Request) {
     await dbConnect();
     const body: RegisterBody = await req.json();
 
-    const { name, email, password, role, token } = body;
+    // Prefix unused variables with _ to silence warning
+    const { name: _name, email: _email, password, role, token } = body;
 
     // Check if Super Admin exists
     const existingSuper = await User.findOne({ role: "super_admin" });
-
-    // {
-    //   "name": "Super Admin",
-    //   "email": "superadmin@example.com",
-    //   "password": "SuperSecure123!",
-    //   "role": "super_admin"
-    // }
 
     // Create Super Admin (only if none exists)
     if (!existingSuper && role === "super_admin") {
@@ -60,11 +54,12 @@ export async function POST(req: Request) {
       { error: "Invalid registration flow" },
       { status: 400 }
     );
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("Registration Error:", err);
     return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
 }
+
 export async function GET(req: Request) {
   try {
     await dbConnect();
@@ -85,7 +80,7 @@ export async function GET(req: Request) {
     const admins = await User.find({ role: "admin" }).select("-passwordHash"); // Exclude password hash
 
     return NextResponse.json({ admins });
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("Fetch Admins Error:", err);
     return NextResponse.json(
       { error: "Failed to fetch admins" },

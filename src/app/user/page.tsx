@@ -1,11 +1,31 @@
 "use client";
 import { useEffect, useState, useMemo } from "react";
-import GroundCard, { Ground } from "@/components/GroundCard";
+import GroundCard, { Ground as BaseGround } from "@/components/GroundCard";
 import GroundFilter from "@/components/GroundFilter";
+
+// ✅ Extend the Ground interface to accept string IDs from MongoDB
+interface Ground extends Omit<BaseGround, "id"> {
+  id: string | number;
+}
+
+// ✅ Define backend response type
+interface BackendGround {
+  _id: string;
+  name: string;
+  location: { address?: string } | string;
+  images?: string[];
+  sports?: { name: string }[];
+}
+
+interface FilterState {
+  name: string;
+  location: string;
+  sport: string;
+}
 
 export default function UserPage() {
   const [grounds, setGrounds] = useState<Ground[]>([]);
-  const [filters, setFilters] = useState({
+  const [filters, setFilters] = useState<FilterState>({
     name: "",
     location: "",
     sport: "",
@@ -16,18 +36,21 @@ export default function UserPage() {
       try {
         const response = await fetch("/api/grounds");
         if (!response.ok) throw new Error("Failed to fetch grounds");
-        const data = await response.json();
 
-        const mappedGrounds: Ground[] = data.map((g: any) => ({
-          id: g._id,
+        const data: BackendGround[] = await response.json();
+
+        // ✅ Map backend response properly
+        const mappedGrounds: Ground[] = data.map((g: BackendGround) => ({
+          id: g._id, // can now be string | number
           name: g.name,
           location:
             typeof g.location === "string"
               ? g.location
               : g.location?.address || "Unknown",
           image: g.images?.[0] || "/placeholder.png",
-          sports: g.sports?.map((s: any) => s.name) || [],
+          sports: g.sports?.map((s) => s.name) || [],
         }));
+
         setGrounds(mappedGrounds);
       } catch (err) {
         console.error("❌ Error fetching grounds:", err);
@@ -37,13 +60,14 @@ export default function UserPage() {
     fetchGrounds();
   }, []);
 
+  // ✅ Extract available sports
   const availableSports = useMemo(() => {
     const sportsSet = new Set<string>();
     grounds.forEach((g) => g.sports?.forEach((s) => sportsSet.add(s)));
     return Array.from(sportsSet);
   }, [grounds]);
 
-  // ✅ Filter logic
+  // ✅ Filtering logic
   const filteredGrounds = useMemo(() => {
     return grounds.filter((g) => {
       const matchesName = g.name
@@ -81,7 +105,12 @@ export default function UserPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10 justify-items-center mt-10">
           {filteredGrounds.length > 0 ? (
             filteredGrounds.map((g) => (
-              <GroundCard key={g.id} ground={g} role={"User"} id={0} />
+              <GroundCard
+                key={g.id.toString()}
+                ground={g}
+                role="User"
+                id={0}
+              />
             ))
           ) : (
             <p className="col-span-full text-center text-gray-500 text-lg">

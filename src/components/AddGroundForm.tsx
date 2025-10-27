@@ -2,6 +2,7 @@
 
 import { useState, useEffect, ChangeEvent, FormEvent } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
+import Image from "next/image";
 
 interface Sport {
   sport: string;
@@ -20,6 +21,23 @@ interface GroundFormData {
   court_type: string;
   sports: Sport[];
   images: File[];
+}
+
+interface StoredGround {
+  id: string | number;
+  name: string;
+  location: string;
+  latitude?: string;
+  longitude?: string;
+  open_from?: string;
+  open_to?: string;
+  facilities?: string;
+  phone_no: string;
+  court_type: string;
+  sports: string[];
+  priceList: number[];
+  images?: string[];
+  image?: string;
 }
 
 const defaultSports = [
@@ -69,8 +87,10 @@ export default function AddGroundForm() {
   // Load existing ground in edit mode
   useEffect(() => {
     if (mode === "edit" && id) {
-      const stored = JSON.parse(localStorage.getItem("grounds") || "[]");
-      const ground = stored.find((g: any) => String(g.id) === id);
+      const stored: StoredGround[] = JSON.parse(
+        localStorage.getItem("grounds") || "[]"
+      );
+      const ground = stored.find((g) => String(g.id) === id);
       if (ground) {
         setFormData({
           ground_name: ground.name,
@@ -79,16 +99,18 @@ export default function AddGroundForm() {
           longitude: ground.longitude || "",
           open_from: ground.open_from || "",
           open_to: ground.open_to || "",
-          facilities: ground.facilities ? ground.facilities.split(", ") : [],
+          facilities: ground.facilities
+            ? ground.facilities.split(", ")
+            : [],
           phone_no: ground.phone_no,
           court_type: ground.court_type,
-          sports: ground.sports.map((sport: string, i: number) => ({
+          sports: ground.sports.map((sport, i) => ({
             sport,
             price: ground.priceList[i] || 0,
           })),
           images: [],
         });
-        setPreviewImages(ground.images || [ground.image]);
+        setPreviewImages(ground.images || [ground.image || ""]);
       }
     }
   }, [mode, id]);
@@ -216,7 +238,7 @@ export default function AddGroundForm() {
     try {
       const res = await fetch("/api/grounds/", {
         method: "POST",
-        body: formDataToSend, // ✅ no Content-Type
+        body: formDataToSend,
       });
 
       const data = await res.json();
@@ -224,8 +246,9 @@ export default function AddGroundForm() {
 
       alert("✅ Ground saved successfully!");
       router.push("/admin");
-    } catch (err: any) {
-      alert("❌ " + err.message);
+    } catch (err: unknown) {
+      const error = err as Error;
+      alert("❌ " + error.message);
     } finally {
       setIsSubmitting(false);
     }
@@ -233,13 +256,11 @@ export default function AddGroundForm() {
 
   const handleDelete = () => {
     if (!id) return;
-    const confirmDelete = confirm(
-      "Are you sure you want to delete this ground?"
-    );
+    const confirmDelete = confirm("Are you sure you want to delete this ground?");
     if (!confirmDelete) return;
 
-    const stored = JSON.parse(localStorage.getItem("grounds") || "[]");
-    const updated = stored.filter((g: any) => String(g.id) !== id);
+    const stored: StoredGround[] = JSON.parse(localStorage.getItem("grounds") || "[]");
+    const updated = stored.filter((g) => String(g.id) !== id);
     localStorage.setItem("grounds", JSON.stringify(updated));
     alert("🗑️ Ground deleted successfully!");
     router.push("/admin");
@@ -255,7 +276,8 @@ export default function AddGroundForm() {
           <button
             onClick={handleDelete}
             type="button"
-            className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition">
+            className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition"
+          >
             Delete
           </button>
         )}
@@ -457,17 +479,21 @@ export default function AddGroundForm() {
             onChange={handleImageChange}
             className="block mt-2"
           />
+
           <div className="flex flex-wrap gap-3 mt-3">
             {previewImages.map((src, index) => (
               <div key={index} className="relative">
-                <img
+                <Image
                   src={src}
+                  alt={`Preview ${index + 1}`}
+                  width={96}
+                  height={96}
                   className="w-24 h-24 object-cover rounded-lg border border-green-400"
                 />
                 <button
                   type="button"
                   onClick={() => removeImage(index)}
-                  className="absolute top-0 right-0 bg-red-600 text-white text-xs px-2 py-1 rounded-bl-lg">
+                  className="absolute top-0 right-0 bg-white rounded-full p-1 text-red-600 shadow">
                   ✕
                 </button>
               </div>
@@ -475,7 +501,6 @@ export default function AddGroundForm() {
           </div>
         </div>
 
-        {/* Submit */}
         <button
           type="submit"
           disabled={isSubmitting}
@@ -494,3 +519,15 @@ export default function AddGroundForm() {
     </div>
   );
 }
+
+
+
+
+
+
+
+
+
+
+
+    

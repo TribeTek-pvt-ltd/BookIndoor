@@ -29,12 +29,6 @@ export default function GroundFilter({
     onFilterChange(newFilters);
   };
 
-  const handleClear = () => {
-    const cleared = { name: "", location: "", sport: "" };
-    setFilters(cleared);
-    onFilterChange(cleared);
-  };
-
   return (
     <div className="w-xl bg-white p-6 rounded-2xl mb-24">
       <h2 className="text-xl font-semibold mb-4 text-green-800">
@@ -92,8 +86,6 @@ export default function GroundFilter({
           </select>
         </div>
       </div>
-
-      
     </div>
   );
 }

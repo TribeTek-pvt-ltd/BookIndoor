@@ -2,6 +2,7 @@
 
 import { useParams } from "next/navigation";
 import { useEffect, useState, JSX } from "react";
+import Image from "next/image";
 import {
   WifiIcon,
   UserGroupIcon,
@@ -58,7 +59,9 @@ export default function UserGroundDetails() {
   const [loading, setLoading] = useState(true);
   const [currentImage, setCurrentImage] = useState(0);
   const [selectedSport, setSelectedSport] = useState<string | null>(null);
-  const [bookingDetails, setBookingDetails] = useState<BookingDetails | null>(null);
+  const [bookingDetails, setBookingDetails] = useState<BookingDetails | null>(
+    null
+  );
   const [showCalendarModal, setShowCalendarModal] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
 
@@ -100,9 +103,13 @@ export default function UserGroundDetails() {
     return <p className="text-center mt-10 text-red-500">Ground not found</p>;
 
   const prevImage = () =>
-    setCurrentImage((prev) => (prev === 0 ? ground.images.length - 1 : prev - 1));
+    setCurrentImage((prev) =>
+      prev === 0 ? ground.images.length - 1 : prev - 1
+    );
   const nextImage = () =>
-    setCurrentImage((prev) => (prev === ground.images.length - 1 ? 0 : prev + 1));
+    setCurrentImage((prev) =>
+      prev === ground.images.length - 1 ? 0 : prev + 1
+    );
 
   const glassCardClasses =
     "bg-white/10 backdrop-blur-md border border-green-900/30 rounded-2xl shadow-lg p-6";
@@ -121,14 +128,20 @@ export default function UserGroundDetails() {
         <div className="relative w-full lg:w-1/2 rounded-2xl overflow-hidden shadow-lg">
           <div className="relative h-64 sm:h-[26rem]">
             {ground.images.map((img, index) => (
-              <img
+              <div
                 key={index}
-                src={img}
-                alt={`${ground.name}-${index}`}
-                className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ${
+                className={`absolute inset-0 w-full h-full transition-opacity duration-1000 ${
                   index === currentImage ? "opacity-100" : "opacity-0"
                 }`}
-              />
+              >
+                <Image
+                  src={img}
+                  alt={`${ground.name}-${index}`}
+                  fill
+                  priority={index === 0}
+                  className="object-cover"
+                />
+              </div>
             ))}
           </div>
           <button
@@ -146,7 +159,9 @@ export default function UserGroundDetails() {
         </div>
 
         {/* 🏟️ Ground Info */}
-        <div className={`${glassCardClasses} flex-1 flex flex-col justify-center space-y-4`}>
+        <div
+          className={`${glassCardClasses} flex-1 flex flex-col justify-center space-y-4`}
+        >
           <h1 className="text-2xl sm:text-3xl font-bold text-green-100 flex items-center gap-2">
             {ground.name}
           </h1>
@@ -178,7 +193,9 @@ export default function UserGroundDetails() {
                 key={facility}
                 className="px-3 py-1.5 sm:px-4 sm:py-2 bg-green-700 text-white rounded-full text-sm sm:text-base font-medium flex items-center gap-1"
               >
-                {facilityIcons[facility] || <HomeIcon className="w-5 h-5 text-green-400" />}
+                {facilityIcons[facility] || (
+                  <HomeIcon className="w-5 h-5 text-green-400" />
+                )}
                 {facility}
               </span>
             ))}
