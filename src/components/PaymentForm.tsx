@@ -23,12 +23,23 @@ interface PaymentFormProps {
   onPaymentSuccess?: (data: BookingResponse) => void;
 }
 
+// ✅ User details type
+interface UserDetails {
+  name: string;
+  phone: string;
+  nic: string;
+  email: string;
+}
+
+// ✅ Keys type for iteration
+type UserDetailKeys = keyof UserDetails;
+
 export default function PaymentForm({
   bookingDetails,
   amount,
   onPaymentSuccess,
 }: PaymentFormProps) {
-  const [userDetails, setUserDetails] = useState({
+  const [userDetails, setUserDetails] = useState<UserDetails>({
     name: "",
     phone: "",
     nic: "",
@@ -38,9 +49,12 @@ export default function PaymentForm({
   const [isAdvance, setIsAdvance] = useState(false);
   const [loading, setLoading] = useState(false);
 
+  // ✅ Type-safe handler
   const handleUserChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setUserDetails((prev) => ({ ...prev, [name]: value }));
+    if (name in userDetails) {
+      setUserDetails((prev) => ({ ...prev, [name as UserDetailKeys]: value }));
+    }
   };
 
   const finalAmount = isAdvance ? amount * 0.5 : amount;
@@ -49,7 +63,12 @@ export default function PaymentForm({
   const handleBooking = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    if (!userDetails.name || !userDetails.phone || !userDetails.nic || !userDetails.email) {
+    if (
+      !userDetails.name ||
+      !userDetails.phone ||
+      !userDetails.nic ||
+      !userDetails.email
+    ) {
       alert("Please fill in all your details including email.");
       return;
     }
@@ -90,12 +109,14 @@ export default function PaymentForm({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           userEmail: userDetails.email,
-          adminEmail: "groundadmin@example.com", // Replace with actual admin email or backend fetch
+          adminEmail: "groundadmin@example.com",
           userName: userDetails.name,
           groundName: bookingDetails.groundName,
           bookingDate: bookingDetails.date,
           bookingTime: bookingDetails.times.join(", "),
-          amount: `Rs.${finalAmount.toFixed(2)} (${isAdvance ? "Advance (50%)" : "Full"})`,
+          amount: `Rs.${finalAmount.toFixed(2)} (${
+            isAdvance ? "Advance (50%)" : "Full"
+          })`,
         }),
       });
 
@@ -106,9 +127,11 @@ export default function PaymentForm({
         alert("Booking confirmed, but email failed to send.");
       } else {
         alert(
-          `✅ ${isAdvance ? "Advance" : "Full"} payment of Rs.${finalAmount.toFixed(
-            2
-          )} successful!\nBooking ID: ${data.bookingId}\nConfirmation email sent!`
+          `✅ ${
+            isAdvance ? "Advance" : "Full"
+          } payment of Rs.${finalAmount.toFixed(2)} successful!\nBooking ID: ${
+            data.bookingId
+          }\nConfirmation email sent!`
         );
       }
 
@@ -124,23 +147,40 @@ export default function PaymentForm({
   return (
     <div
       className="w-full max-w-3xl mx-auto h-[90vh] overflow-y-auto rounded-2xl scrollbar-thin scrollbar-thumb-green-500 scrollbar-track-green-100"
-      style={{ scrollBehavior: "smooth" }}
-    >
+      style={{ scrollBehavior: "smooth" }}>
       <form
         onSubmit={handleBooking}
-        className="p-8 border border-green-700/30 rounded-2xl space-y-6 bg-green-50/30 shadow-lg"
-      >
+        className="p-8 border border-green-700/30 rounded-2xl space-y-6 bg-green-50/30 shadow-lg">
         {/* Booking Summary */}
         <div className="bg-green-50 p-5 rounded-xl border border-green-200 shadow-inner">
-          <h3 className="font-semibold text-green-800 mb-3 text-lg">Booking Summary</h3>
+          <h3 className="font-semibold text-green-800 mb-3 text-lg">
+            Booking Summary
+          </h3>
           <div className="space-y-1 text-green-900">
-            <p><span className="font-medium">Ground:</span> {bookingDetails.groundName}</p>
-            <p><span className="font-medium">Location:</span> {bookingDetails.location}</p>
-            <p><span className="font-medium">Date:</span> {bookingDetails.date}</p>
-            <p><span className="font-medium">Time:</span> {bookingDetails.times.join(", ")}</p>
-            <p><span className="font-medium">Payment Type:</span> {isAdvance ? "Advance (50%)" : "Full"}</p>
+            <p>
+              <span className="font-medium">Ground:</span>{" "}
+              {bookingDetails.groundName}
+            </p>
+            <p>
+              <span className="font-medium">Location:</span>{" "}
+              {bookingDetails.location}
+            </p>
+            <p>
+              <span className="font-medium">Date:</span> {bookingDetails.date}
+            </p>
+            <p>
+              <span className="font-medium">Time:</span>{" "}
+              {bookingDetails.times.join(", ")}
+            </p>
+            <p>
+              <span className="font-medium">Payment Type:</span>{" "}
+              {isAdvance ? "Advance (50%)" : "Full"}
+            </p>
             <div className="mt-4 text-green-900 font-semibold text-lg text-center">
-              Total Amount: <span className="text-green-700">Rs.{finalAmount.toFixed(2)}</span>
+              Total Amount:{" "}
+              <span className="text-green-700">
+                Rs.{finalAmount.toFixed(2)}
+              </span>
             </div>
           </div>
         </div>
@@ -154,50 +194,56 @@ export default function PaymentForm({
               isAdvance
                 ? "bg-green-700 text-white"
                 : "bg-green-100 text-green-700 border border-green-300"
-            }`}
-          >
+            }`}>
             {isAdvance ? "Cancel Advance Payment" : "Pay 50% Advance"}
           </button>
         </div>
 
         {/* User Details */}
         <div className="space-y-4">
-          {["name", "email", "phone", "nic"].map((field) => (
-            <div key={field}>
-              <label className="block text-green-700 font-medium mb-1">
-                {field === "name"
-                  ? "Full Name"
-                  : field === "email"
-                  ? "Email Address"
-                  : field === "phone"
-                  ? "Phone Number"
-                  : "NIC / Passport Number"}
-              </label>
-              <input
-                type={field === "email" ? "email" : field === "phone" ? "tel" : "text"}
-                name={field}
-                value={(userDetails as any)[field]}
-                onChange={handleUserChange}
-                placeholder={
-                  field === "name"
-                    ? "Enter your full name"
+          {(["name", "email", "phone", "nic"] as UserDetailKeys[]).map(
+            (field) => (
+              <div key={field}>
+                <label className="block text-green-700 font-medium mb-1">
+                  {field === "name"
+                    ? "Full Name"
                     : field === "email"
-                    ? "Enter your email address"
+                    ? "Email Address"
                     : field === "phone"
-                    ? "Enter your phone number"
-                    : "Enter your NIC or Passport number"
-                }
-                className="w-full border border-gray-300 rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-green-600"
-              />
-            </div>
-          ))}
+                    ? "Phone Number"
+                    : "NIC / Passport Number"}
+                </label>
+                <input
+                  type={
+                    field === "email"
+                      ? "email"
+                      : field === "phone"
+                      ? "tel"
+                      : "text"
+                  }
+                  name={field}
+                  value={userDetails[field]}
+                  onChange={handleUserChange}
+                  placeholder={
+                    field === "name"
+                      ? "Enter your full name"
+                      : field === "email"
+                      ? "Enter your email address"
+                      : field === "phone"
+                      ? "Enter your phone number"
+                      : "Enter your NIC or Passport number"
+                  }
+                  className="w-full border border-gray-300 rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-green-600"
+                />
+              </div>
+            )
+          )}
         </div>
 
         <button
           type="submit"
           disabled={loading}
-          className="w-full mt-4 px-4 py-3 bg-green-700 text-white font-semibold rounded-lg hover:bg-green-800 transition disabled:opacity-50"
-        >
+          className="w-full mt-4 px-4 py-3 bg-green-700 text-white font-semibold rounded-lg hover:bg-green-800 transition disabled:opacity-50">
           {loading
             ? "Processing..."
             : isAdvance

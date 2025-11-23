@@ -158,8 +158,7 @@ export default function UserGroundDetails() {
                 key={index}
                 className={`absolute inset-0 w-full h-full transition-opacity duration-1000 ${
                   index === currentImage ? "opacity-100" : "opacity-0"
-                }`}
-              >
+                }`}>
                 <Image
                   src={img}
                   alt={`${ground.name}-${index}`}
@@ -172,20 +171,19 @@ export default function UserGroundDetails() {
           </div>
           <button
             onClick={prevImage}
-            className="absolute top-1/2 left-3 sm:left-4 -translate-y-1/2 bg-white/80 p-2 rounded-full shadow hover:scale-105 transition"
-          >
+            className="absolute top-1/2 left-3 sm:left-4 -translate-y-1/2 bg-white/80 p-2 rounded-full shadow hover:scale-105 transition">
             ◀
           </button>
           <button
             onClick={nextImage}
-            className="absolute top-1/2 right-3 sm:right-4 -translate-y-1/2 bg-white/80 p-2 rounded-full shadow hover:scale-105 transition"
-          >
+            className="absolute top-1/2 right-3 sm:right-4 -translate-y-1/2 bg-white/80 p-2 rounded-full shadow hover:scale-105 transition">
             ▶
           </button>
         </div>
 
         {/* 🏟️ Ground Info */}
-        <div className={`${glassCardClasses} flex-1 flex flex-col justify-center space-y-4`}>
+        <div
+          className={`${glassCardClasses} flex-1 flex flex-col justify-center space-y-4`}>
           <h1 className="text-2xl sm:text-3xl font-bold text-green-100 flex items-center gap-2">
             {ground.name}
           </h1>
@@ -199,8 +197,7 @@ export default function UserGroundDetails() {
               )}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-green-300 hover:underline text-sm ml-2"
-            >
+              className="text-green-300 hover:underline text-sm ml-2">
               View on Map
             </a>
           </p>
@@ -215,8 +212,7 @@ export default function UserGroundDetails() {
             {ground.amenities.map((facility) => (
               <span
                 key={facility}
-                className="px-3 py-1.5 sm:px-4 sm:py-2 bg-green-700 text-white rounded-full text-sm sm:text-base font-medium flex items-center gap-1"
-              >
+                className="px-3 py-1.5 sm:px-4 sm:py-2 bg-green-700 text-white rounded-full text-sm sm:text-base font-medium flex items-center gap-1">
                 {facilityIcons[facility] || (
                   <HomeIcon className="w-5 h-5 text-green-400" />
                 )}
@@ -229,9 +225,8 @@ export default function UserGroundDetails() {
           {role === "admin" && (
             <button
               onClick={() => setShowEditModal(true)}
-              className="mt-4 inline-flex items-center gap-2 bg-yellow-500 hover:bg-yellow-600 text-white font-semibold px-5 py-2 rounded-lg transition"
-            >
-              <PencilSquareIcon className="w-5 h-5" /> 
+              className="mt-4 inline-flex items-center gap-2 bg-yellow-500 hover:bg-yellow-600 text-white font-semibold px-5 py-2 rounded-lg transition">
+              <PencilSquareIcon className="w-5 h-5" />
             </button>
           )}
         </div>
@@ -256,8 +251,7 @@ export default function UserGroundDetails() {
                   selectedSport === sport.name
                     ? "bg-green-600 text-white border-green-600 scale-105"
                     : "bg-white text-green-900 border-green-600 hover:bg-green-100 hover:text-green-900"
-                }`}
-              >
+                }`}>
                 {sport.name} – Rs {sport.pricePerHour}
               </button>
             ))}
@@ -271,8 +265,7 @@ export default function UserGroundDetails() {
           <div className="bg-white rounded-2xl w-11/12 max-w-lg p-6 relative">
             <button
               onClick={() => setShowCalendarModal(false)}
-              className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
-            >
+              className="absolute top-4 right-4 text-gray-500 hover:text-gray-700">
               <XMarkIcon className="w-6 h-6" />
             </button>
             <h3 className="text-xl font-semibold mb-4">
@@ -297,8 +290,7 @@ export default function UserGroundDetails() {
           <div className="bg-white rounded-2xl w-11/12 max-w-md p-6 relative">
             <button
               onClick={() => setShowPaymentModal(false)}
-              className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
-            >
+              className="absolute top-4 right-4 text-gray-500 hover:text-gray-700">
               <XMarkIcon className="w-6 h-6" />
             </button>
             <PaymentForm
@@ -328,12 +320,29 @@ export default function UserGroundDetails() {
           <div className="bg-white rounded-2xl w-11/12 max-w-3xl p-6 relative">
             <button
               onClick={() => setShowEditModal(false)}
-              className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
-            >
+              className="absolute top-4 right-4 text-gray-500 hover:text-gray-700">
               <XMarkIcon className="w-6 h-6" />
             </button>
             <h3 className="text-xl font-semibold mb-4">Edit Ground Details</h3>
-            <AddGroundForm {...({ ground: ground, isEditing: true } as any)} />
+            <AddGroundForm
+              ground={{
+                id: ground._id || "",
+                name: ground.name,
+                location: ground.location.address,
+                latitude: String(ground.location.lat),
+                longitude: String(ground.location.lng),
+                open_from: ground.availableTime.from,
+                open_to: ground.availableTime.to,
+                facilities: ground.amenities.join(", "),
+                phone_no: "", // if not available, can leave empty or add default
+                court_type: "Outdoor", // default value or fetch from API if exists
+                sports: ground.sports.map((s) => s.name),
+                priceList: ground.sports.map((s) => s.pricePerHour),
+                images: ground.images,
+              }}
+              isEditing={true}
+              onClose={() => setShowEditModal(false)}
+            />
           </div>
         </div>
       )}

@@ -6,7 +6,7 @@ import GroundFilter from "@/components/GroundFilter";
 
 // ✅ Extend the Ground interface to accept string IDs from MongoDB
 interface Ground extends BaseGround {
-  _id: any;
+  _id: string;
   id: number;
 }
 
@@ -96,7 +96,6 @@ export default function UserPage() {
   return (
     <div className="min-h-screen w-full bg-white text-gray-900 flex flex-col overflow-x-hidden">
       {/* ✅ Top bar with Logout button */}
-     
 
       {/* Page Header */}
       <section className="w-full max-w-[1600px] mx-auto flex-1 px-4 sm:px-8 py-16">
@@ -120,8 +119,11 @@ export default function UserPage() {
           {filteredGrounds.length > 0 ? (
             filteredGrounds.map((g) => (
               <GroundCard
-                key={g._id?.toString() || g.id?.toString() || Math.random().toString()}
-
+                key={
+                  g._id?.toString() ||
+                  g.id?.toString() ||
+                  Math.random().toString()
+                }
                 ground={g}
                 role="User"
                 id={g.id}
