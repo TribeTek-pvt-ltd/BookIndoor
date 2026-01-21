@@ -14,7 +14,7 @@ interface BookingInput {
   ground: string;
   sportName: string;
   bookings: BookingItem[];
-  paymentStatus: "advanced_paid" | "full_paid";
+  paymentStatus: "pending" | "advanced_paid" | "full_paid";
 }
 
 // ✅ Helper function to generate 30-minute slots
@@ -85,8 +85,13 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Sport not found" }, { status: 404 });
 
     const pricePerSlot = sport.pricePerHour;
-    const paymentStatus =
-      body.paymentStatus === "full_paid" ? "full_paid" : "advanced_paid";
+
+    // ✅ Allow "pending" status for admins (or anyone if logic allows, but restricted in frontend)
+    // Default to "advanced_paid" if invalid status provided, but respect "pending" and "full_paid"
+    const validStatuses = ["pending", "advanced_paid", "full_paid"];
+    const paymentStatus = validStatuses.includes(body.paymentStatus)
+      ? body.paymentStatus
+      : "advanced_paid";
 
     const createdBookings = [];
     let grandTotal = 0;
@@ -196,10 +201,13 @@ export async function GET(req: Request) {
     );
 
     // 🟢 Return slot availability
-    const response = timeSlots.map((slot) => ({
-      timeSlot: slot,
-      status: bookedSet.has(slot) ? "booked" : "available",
-    }));
+    const response = timeSlots.map((slot) => {
+      const startTime = slot.split("-")[0];
+      return {
+        timeSlot: slot,
+        status: bookedSet.has(startTime) ? "booked" : "available",
+      };
+    });
 
     return NextResponse.json(response);
   } catch (err: unknown) {

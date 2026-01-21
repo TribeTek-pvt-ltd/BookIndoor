@@ -80,7 +80,7 @@ export default function BookingDetailsTab({
           date: b.date,
           timeSlot: b.timeSlots.map((ts: any) => ts.startTime).join(", "),
           bookingStatus: b.status === "confirmed" ? "Confirmed" : "Reserved",
-          paymentStatus: b.paymentStatus === "full_paid" ? "Paid" : "Advanced Paid",
+          paymentStatus: b.paymentStatus === "full_paid" ? "Paid" : b.paymentStatus === "advanced_paid" ? "Advanced Paid" : "Pending",
           createdAt: new Date(b.createdAt).toLocaleDateString(),
           sport: b.sportName,
           groundName: b.ground?.name || "Unknown"
@@ -109,6 +109,37 @@ export default function BookingDetailsTab({
       return acc;
     }, {} as Record<string, Booking[]>)
     : null;
+
+  const updatePaymentStatus = async (bookingId: number, newStatus: string) => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) return;
+
+      const backendStatus = newStatus === "Paid" ? "full_paid" : newStatus === "Advanced Paid" ? "advanced_paid" : "pending";
+
+      const res = await fetch(`/api/booking/${bookingId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          token,
+          paymentStatus: backendStatus
+        }),
+      });
+
+      if (!res.ok) throw new Error("Failed to update status");
+
+      // Optimistic update
+      setBookings(prev => prev.map(b =>
+        b.id === bookingId ? { ...b, paymentStatus: newStatus } : b
+      ));
+
+    } catch (err) {
+      console.error("Update failed", err);
+      alert("Failed to update status");
+    }
+  };
 
   const renderBookingsTable = (items: Booking[]) => (
     <div className="overflow-x-auto">
@@ -189,14 +220,21 @@ export default function BookingDetailsTab({
                     ></span>
                     {booking.bookingStatus}
                   </span>
-                  <span
-                    className={`inline-flex items-center w-fit px-2 py-0.5 rounded-md text-[9px] font-bold ${booking.paymentStatus === "Paid"
-                      ? "bg-blue-50 text-blue-700"
-                      : "bg-purple-50 text-purple-700"
+                  <select
+                    value={booking.paymentStatus}
+                    onChange={(e) => updatePaymentStatus(booking.id, e.target.value)}
+                    onClick={(e) => e.stopPropagation()}
+                    className={`px-2 py-0.5 rounded-md text-[9px] font-bold border cursor-pointer focus:outline-none focus:ring-1 focus:ring-emerald-500 ${booking.paymentStatus === "Paid"
+                      ? "bg-blue-50 text-blue-700 border-blue-100"
+                      : booking.paymentStatus === "Advanced Paid"
+                        ? "bg-purple-50 text-purple-700 border-purple-100"
+                        : "bg-amber-50 text-amber-700 border-amber-100"
                       }`}
                   >
-                    {booking.paymentStatus}
-                  </span>
+                    <option value="Pending">Pending</option>
+                    <option value="Advanced Paid">Advanced</option>
+                    <option value="Paid">Paid</option>
+                  </select>
                 </div>
               </td>
               <td className="p-4 text-right">

@@ -9,6 +9,8 @@ import BookingDetailsTab from "@/components/BookingDetailsTab";
 import BookingSummaryTab from "@/components/BookingSummaryTab";
 import Calendar from "@/components/Calendar";
 
+import DataViewerTab from "@/components/DataViewerTab";
+
 interface Stats {
   totalAdmins?: number;
   totalGrounds: number;
@@ -16,7 +18,7 @@ interface Stats {
   activeBookings: number;
 }
 
-type TabType = "grounds" | "summary" | "bookings" | "details";
+type TabType = "grounds" | "summary" | "bookings" | "details" | "database";
 
 interface BackendGround {
   _id: string;
@@ -128,7 +130,57 @@ export default function AdminPage() {
     };
 
     fetchGrounds();
+    fetchGrounds();
   }, []);
+
+  const handleAdminBooking = async (
+    bookingDates: { date: string; times: string[] }[],
+    sport?: string,
+    paymentStatus?: string
+  ) => {
+    if (!selectedGroundId || !sport) {
+      alert("Please select a sport.");
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem("token");
+      const formattedBookings = bookingDates.map((b) => ({
+        date: b.date,
+        timeSlots: b.times.map((t) => ({ startTime: t.split("-")[0] })),
+      }));
+
+      const res = await fetch("/api/booking", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({
+          token,
+          ground: selectedGroundId,
+          sportName: sport,
+          bookings: formattedBookings,
+          paymentStatus: paymentStatus || "pending",
+          guest: {
+            name: "Admin Booking", // Default name for admin bookings if not specified
+            phone: "N/A",
+            nicNumber: "N/A"
+          }
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Booking failed");
+
+      alert("Booking created successfully!");
+      // Optionally refresh bookings or clear selection
+      // You might want to trigger a refresh of the Calendar or BookingDetailsTab
+    } catch (err: any) {
+      console.error("Booking Error:", err);
+      alert(err.message || "Failed to create booking");
+    }
+  };
 
   return (
     <div className="justify-center bg-gray-50 min-h-screen">
@@ -171,15 +223,7 @@ export default function AdminPage() {
                 </button>
               )}
 
-              {/* ✅ Logout button for Admin / SuperAdmin */}
-              {(role === "admin" || role === "super_admin") && (
-                <button
-                  onClick={handleLogout}
-                  className="px-5 py-2 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transition-all shadow-md w-full sm:w-auto"
-                >
-                  Logout
-                </button>
-              )}
+
             </div>
           </div>
         </div>
@@ -189,7 +233,8 @@ export default function AdminPage() {
           {[
             { key: "grounds", label: "Grounds" },
             { key: "bookings", label: "Bookings" },
-            { key: "summary", label: "Summary" }
+            { key: "summary", label: "Summary" },
+            { key: "database", label: "Database" }
           ].map((tab) => (
             <button
               key={tab.key}
@@ -297,8 +342,10 @@ export default function AdminPage() {
                       <Calendar
                         groundId={selectedGroundId}
                         groundName={grounds.find(g => g._id === selectedGroundId)?.name}
+                        sports={grounds.find(g => g._id === selectedGroundId)?.sports || []}
                         isEmbedded={true}
                         isAdmin={true}
+                        onConfirmBookings={handleAdminBooking}
                       />
                     </div>
                   </div>
@@ -317,6 +364,10 @@ export default function AdminPage() {
 
           {activeTab === "summary" && (
             <BookingSummaryTab groundId={selectedGroundId} />
+          )}
+
+          {activeTab === "database" && (
+            <DataViewerTab />
           )}
         </div>
       </div>

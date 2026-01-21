@@ -13,7 +13,8 @@ interface CalendarProps {
   groundId: string;
   groundName?: string;
   isAdmin?: boolean;
-  onConfirmBookings?: (bookings: { date: string; times: string[] }[]) => void;
+  onConfirmBookings?: (bookings: { date: string; times: string[] }[], sport?: string, paymentStatus?: string) => void;
+  sports?: string[];
   isEmbedded?: boolean;
 }
 
@@ -24,6 +25,7 @@ export default function Calendar({
   groundName,
   isAdmin = false,
   onConfirmBookings,
+  sports = [],
   isEmbedded = false,
 }: CalendarProps) {
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -34,6 +36,17 @@ export default function Calendar({
     Record<string, string[]>
   >({});
   const [showTimePicker, setShowTimePicker] = useState(false);
+
+  // Admin specific states
+  const [selectedSport, setSelectedSport] = useState<string>("");
+  const [paymentStatus, setPaymentStatus] = useState<string>("pending");
+
+  // Initialize selectedSport when sports prop changes
+  useEffect(() => {
+    if (sports.length > 0 && !selectedSport) {
+      setSelectedSport(sports[0]);
+    }
+  }, [sports]);
 
   // ✅ Fetch available slots for selected date
   useEffect(() => {
@@ -58,7 +71,6 @@ export default function Calendar({
   }, [selectedDate, groundId]);
 
   const toggleSlot = (timeSlot: string) => {
-    // ...
     if (!selectedDate) return;
 
     setAllSelectedBookings((prev) => {
@@ -150,7 +162,8 @@ export default function Calendar({
     }
 
     if (onConfirmBookings) {
-      onConfirmBookings(bookingsArray);
+      // Pass selected sport and payment status if available
+      onConfirmBookings(bookingsArray, selectedSport, paymentStatus);
     }
   };
 
@@ -234,19 +247,54 @@ export default function Calendar({
                   <motion.div
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="mt-10 p-6 bg-emerald-50 rounded-xl border border-emerald-100 flex flex-col sm:flex-row items-center justify-between gap-4"
+                    className="mt-10 p-6 bg-emerald-50 rounded-xl border border-emerald-100 flex flex-col lg:flex-row items-center justify-between gap-6"
                   >
-                    <div>
-                      <p className="text-emerald-900 font-extrabold font-outfit text-lg">
-                        {Object.keys(allSelectedBookings).length} Days Selected
-                      </p>
-                      <p className="text-emerald-600 text-sm font-bold uppercase tracking-wider">
-                        {totalSlots} slots ready for checkout
-                      </p>
+                    <div className="flex-1 w-full flex flex-col sm:flex-row gap-6 items-center">
+                      <div>
+                        <p className="text-emerald-900 font-extrabold font-outfit text-lg">
+                          {Object.keys(allSelectedBookings).length} Days Selected
+                        </p>
+                        <p className="text-emerald-600 text-sm font-bold uppercase tracking-wider">
+                          {totalSlots} slots ready for checkout
+                        </p>
+                      </div>
+
+                      {isAdmin && (
+                        <div className="flex gap-3 flex-1 w-full sm:w-auto">
+                          {/* Sport Selection */}
+                          <div className="flex-1">
+                            <label className="text-[10px] uppercase font-black tracking-widest text-slate-400 block mb-1">Sport</label>
+                            <select
+                              value={selectedSport}
+                              onChange={(e) => setSelectedSport(e.target.value)}
+                              className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm font-bold text-slate-700 focus:outline-none focus:border-emerald-500"
+                            >
+                              {sports.map(s => (
+                                <option key={s} value={s}>{s}</option>
+                              ))}
+                            </select>
+                          </div>
+
+                          {/* Payment Status Selection */}
+                          <div className="flex-1">
+                            <label className="text-[10px] uppercase font-black tracking-widest text-slate-400 block mb-1">Status</label>
+                            <select
+                              value={paymentStatus}
+                              onChange={(e) => setPaymentStatus(e.target.value)}
+                              className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm font-bold text-slate-700 focus:outline-none focus:border-emerald-500"
+                            >
+                              <option value="pending">Pending</option>
+                              <option value="advanced_paid">Advanced</option>
+                              <option value="full_paid">Full Paid</option>
+                            </select>
+                          </div>
+                        </div>
+                      )}
                     </div>
+
                     <button
                       onClick={handleConfirm}
-                      className="btn-premium px-10 py-3 whitespace-nowrap shadow-xl shadow-emerald-100"
+                      className="btn-premium px-10 py-3 whitespace-nowrap shadow-xl shadow-emerald-100 w-full sm:w-auto"
                     >
                       <span className="!text-white">Proceed to Booking</span>
                     </button>

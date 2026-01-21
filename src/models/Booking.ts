@@ -17,7 +17,7 @@ export interface IBooking extends Document {
   date: string; // "YYYY-MM-DD"
   timeSlots: ITimeSlot[];
   status: "reserved" | "confirmed";
-  paymentStatus: "advanced_paid" | "full_paid";
+  paymentStatus: "pending" | "advanced_paid" | "full_paid";
   totalAmount: number;
   createdAt: Date;
 }
@@ -49,7 +49,7 @@ const BookingSchema = new Schema<IBooking>(
     },
     paymentStatus: {
       type: String,
-      enum: ["advanced_paid", "full_paid"],
+      enum: ["pending", "advanced_paid", "full_paid"],
       default: "advanced_paid",
     },
     totalAmount: { type: Number, required: true },
@@ -57,5 +57,9 @@ const BookingSchema = new Schema<IBooking>(
   { timestamps: true }
 );
 
-export default mongoose.models.Booking ||
-  mongoose.model<IBooking>("Booking", BookingSchema);
+// Prevent Mongoose overwrite warning in development
+if (mongoose.models.Booking) {
+  delete mongoose.models.Booking;
+}
+
+export default mongoose.model<IBooking>("Booking", BookingSchema);
