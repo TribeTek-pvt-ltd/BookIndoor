@@ -45,7 +45,6 @@ type UserDetailKeys = keyof UserDetails;
 export default function PaymentForm({
   bookingDetails,
   amount,
-  onPaymentSuccess,
 }: PaymentFormProps) {
   const [userDetails, setUserDetails] = useState<UserDetails>({
     name: "",

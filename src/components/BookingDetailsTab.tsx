@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { EyeIcon, CalendarIcon, XMarkIcon, CheckCircleIcon, ClockIcon, PhoneIcon, UserIcon, MapPinIcon } from "@heroicons/react/24/outline";
+import { EyeIcon, CalendarIcon } from "@heroicons/react/24/outline";
 
 interface Booking {
   id: number | string;
@@ -35,32 +35,6 @@ interface APIBooking {
   ground?: { name: string };
 }
 
-const defaultBookings: Booking[] = [
-  {
-    id: 1,
-    name: "John Doe",
-    phone: "0771234567",
-    nic: "123456789V",
-    date: "2025-10-05",
-    timeSlot: "10:00 AM - 11:00 AM",
-    bookingStatus: "Confirmed",
-    paymentStatus: "Paid",
-    createdAt: "2025-09-28",
-    sport: "Badminton",
-  },
-  {
-    id: 2,
-    name: "Jane Smith",
-    phone: "0719876543",
-    nic: "N1234567",
-    date: "2025-10-06",
-    timeSlot: "02:00 PM - 03:00 PM",
-    bookingStatus: "Pending",
-    paymentStatus: "Unpaid",
-    createdAt: "2025-09-29",
-    sport: "Futsal",
-  },
-];
 
 export default function BookingDetailsTab({
   selectedSport,

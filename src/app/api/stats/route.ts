@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import mongoose from "mongoose";
 import dbConnect from "@/lib/mongodb";
 import User from "@/models/User";
 import Ground from "@/models/Grounds";
@@ -15,6 +16,24 @@ interface GroundStat {
   groundName: string;
   totalBookings: number;
   totalRevenue: number;
+}
+
+interface PeriodStats {
+  income: number;
+  totalBookings: number;
+  sports: Record<string, number>;
+}
+
+interface GroundBreakdown {
+  groundId: mongoose.Types.ObjectId;
+  groundName: string;
+  totalRevenue: number;
+  totalBookings: number;
+  summary: {
+    weekly: PeriodStats;
+    monthly: PeriodStats;
+    yearly: PeriodStats;
+  };
 }
 
 export async function GET(req: Request) {
@@ -117,7 +136,7 @@ export async function GET(req: Request) {
       const ownedGroundIds = ownedGrounds.map((g) => g._id.toString());
       totalGrounds = ownedGrounds.length;
 
-      let query: Record<string, any> = { ground: { $in: ownedGroundIds } };
+      let query: mongoose.FilterQuery<IBooking> = { ground: { $in: ownedGroundIds } };
       if (groundFilter) {
         if (!ownedGroundIds.includes(groundFilter)) {
           return NextResponse.json({ error: "Forbidden" }, { status: 403 });
@@ -152,7 +171,7 @@ export async function GET(req: Request) {
       const adminBookings = await Booking.find(query);
       totalBookings = adminBookings.length;
 
-      let perGroundBreakdown: Record<string, any>[] = [];
+      let perGroundBreakdown: GroundBreakdown[] = [];
       if (!groundFilter) {
         perGroundBreakdown = ownedGrounds.map(g => {
           const groundBookings = adminBookings.filter(b => b.ground.toString() === g._id.toString());

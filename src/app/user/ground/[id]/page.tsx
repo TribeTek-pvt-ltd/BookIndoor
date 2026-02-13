@@ -1,6 +1,6 @@
 "use client";
 
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState, JSX } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
@@ -89,6 +89,7 @@ const facilityIcons: Record<string, JSX.Element> = {
 
 export default function UserGroundDetails() {
   const params = useParams();
+  const router = useRouter();
   const id = Array.isArray(params.id) ? params.id[0] : params.id;
 
   const [ground, setGround] = useState<Ground | null>(null);
@@ -99,7 +100,6 @@ export default function UserGroundDetails() {
     null
   );
   const [showCalendarModal, setShowCalendarModal] = useState(false);
-  const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false); // ✅ For editing
   const [role, setRole] = useState<"admin" | "super_admin" | "user" | null>(null);
 
@@ -167,12 +167,12 @@ export default function UserGroundDetails() {
 
   const glassCardClasses = "glass-card p-6 sm:p-8";
 
-  const calculateAmount = () => {
-    if (!selectedSport || !bookingDetails) return 0;
+  const calculateAmount = (bookings: BookingItem[]) => {
+    if (!selectedSport || !ground) return 0;
     const sport = ground.sports.find((s) => s.name === selectedSport);
     if (!sport) return 0;
 
-    const totalSlots = bookingDetails.bookings.reduce(
+    const totalSlots = bookings.reduce(
       (acc, b) => acc + b.times.length,
       0
     );
@@ -362,43 +362,23 @@ export default function UserGroundDetails() {
               groundId={id}
               groundName={ground.name}
               onConfirmBookings={(bookings) => {
-                setBookingDetails({ bookings });
+                const amount = calculateAmount(bookings);
+                sessionStorage.setItem("pendingBooking", JSON.stringify({
+                  groundId: id,
+                  sportName: selectedSport || "",
+                  groundName: ground.name,
+                  location: ground.location.address,
+                  bookings: bookings,
+                  amount: amount,
+                }));
                 setShowCalendarModal(false);
-                setShowPaymentModal(true);
+                router.push("/booking/payment");
               }}
             />
           </div>
         </div>
       )}
 
-      {/* 💳 Payment Modal */}
-      {showPaymentModal && bookingDetails && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="bg-white rounded-xl w-11/12 max-w-md p-6 relative">
-            <button
-              onClick={() => setShowPaymentModal(false)}
-              className="absolute top-4 right-4 text-gray-500 hover:text-gray-700">
-              <XMarkIcon className="w-6 h-6" />
-            </button>
-            <PaymentForm
-              bookingDetails={{
-                groundId: id,
-                sportName: selectedSport || "",
-                groundName: ground.name,
-                location: ground.location.address,
-                bookings: bookingDetails.bookings,
-              }}
-              amount={calculateAmount()}
-              onPaymentSuccess={() => {
-                setBookingDetails(null);
-                setSelectedSport(null);
-                setShowPaymentModal(false);
-                alert("Booking completed successfully!");
-              }}
-            />
-          </div>
-        </div>
-      )}
 
       {/* 🧾 Admin Edit Modal */}
       <AnimatePresence>

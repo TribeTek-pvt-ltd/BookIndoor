@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import mongoose from "mongoose";
 import dbConnect from "@/lib/mongodb";
-import Booking from "@/models/Booking";
+import Booking, { IBooking } from "@/models/Booking";
 import Ground from "@/models/Grounds";
 
 interface BookingItem {
@@ -155,7 +155,7 @@ export async function GET(req: Request) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
       }
 
-      let query: any = {};
+      let query: mongoose.FilterQuery<IBooking> = {};
       if (decoded.role === "admin") {
         const ownedGrounds = await Ground.find({ owner: decoded.id }).select("_id");
         const ownedIds = ownedGrounds.map(g => g._id.toString());

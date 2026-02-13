@@ -7,7 +7,7 @@ export async function POST(req: Request) {
     try {
         const text = await req.text();
         const params = new URLSearchParams(text);
-        const data: any = {};
+        const data: Record<string, string> = {};
         params.forEach((value, key) => {
             data[key] = value;
         });

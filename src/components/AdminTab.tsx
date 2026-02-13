@@ -2,7 +2,6 @@
 
 import { useState, useEffect, Key, useCallback } from "react";
 import AddAdminForm from "./AddAdminForm";
-import { useRouter } from "next/navigation";
 import Image from "next/image";
 
 interface Admin {
@@ -340,8 +339,8 @@ export default function AdminTab() {
                       {adminDetails.grounds && adminDetails.grounds.length > 0 ? (
                         adminDetails.grounds.map((ground: Ground) => (
                           <div key={ground._id} className="flex items-center gap-4 bg-white p-4 rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition-all group">
-                            <div className="w-20 h-20 rounded-2xl overflow-hidden bg-slate-100 flex-shrink-0">
-                              <img src={ground.images?.[0] || "/placeholder.png"} alt={ground.name} className="w-full h-full object-cover" />
+                            <div className="w-20 h-20 rounded-2xl overflow-hidden bg-slate-100 flex-shrink-0 relative">
+                              <Image src={ground.images?.[0] || "/placeholder.png"} alt={ground.name} fill className="object-cover" />
                             </div>
                             <div className="flex-1 min-w-0">
                               <h5 className="font-bold text-slate-900 truncate group-hover:text-emerald-700 transition-colors">{ground.name}</h5>

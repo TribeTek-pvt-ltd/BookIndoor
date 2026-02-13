@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import GroundCard, { Ground as BaseGround } from "@/components/GroundCard";
 import AddGroundForm from "@/components/AddGroundForm";
 import BookingDetailsTab from "@/components/BookingDetailsTab";
@@ -58,12 +58,6 @@ export default function AdminPage() {
   }, []);
 
   // ✅ Handle logout
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    localStorage.removeItem("id");
-    router.push("/login"); // Redirect to src/app/login/page.tsx
-  };
 
   // Fetch stats
   useEffect(() => {

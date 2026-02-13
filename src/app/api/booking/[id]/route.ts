@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
 import dbConnect from "@/lib/mongodb";
-import Booking from "@/models/Booking";
+import Booking, { IBooking } from "@/models/Booking";
 import { verifyToken } from "@/lib/auth";
 
 export async function PUT(
     req: Request,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
         await dbConnect();
@@ -27,7 +27,7 @@ export async function PUT(
             return NextResponse.json({ error: "Forbidden" }, { status: 403 });
         }
 
-        const updateData: Record<string, any> = {};
+        const updateData: Partial<IBooking> = {};
         if (paymentStatus) updateData.paymentStatus = paymentStatus;
         if (bookingStatus) updateData.status = bookingStatus;
 
