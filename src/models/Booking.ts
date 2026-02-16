@@ -19,6 +19,8 @@ export interface IBooking extends Document {
   status: "reserved" | "confirmed";
   paymentStatus: "pending" | "advanced_paid" | "full_paid";
   paymentGroupId?: string;
+  payherePaymentId?: string; // ✅ Track PayHere transaction ID
+  paidAmount?: number; // ✅ Track actual amount paid
   totalAmount: number;
   createdAt: Date;
 }
@@ -54,6 +56,8 @@ const BookingSchema = new Schema<IBooking>(
       default: "advanced_paid",
     },
     paymentGroupId: { type: String }, // ✅ ID to group bookings for single payment
+    payherePaymentId: { type: String }, // ✅ Track PayHere transaction ID
+    paidAmount: { type: Number }, // ✅ Track actual amount paid
     totalAmount: { type: Number, required: true },
   },
   { timestamps: true }

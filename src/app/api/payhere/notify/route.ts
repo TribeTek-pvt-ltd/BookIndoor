@@ -1,7 +1,10 @@
 import { NextResponse } from 'next/server';
 import dbConnect from '@/lib/mongodb';
 import Booking from '@/models/Booking';
+import Ground, { IGround } from '@/models/Grounds';
+import User, { IUser } from '@/models/User';
 import { verifyPayHereSignature } from '@/lib/payhere';
+import { sendBookingConfirmationEmail } from '@/lib/email';
 
 export async function POST(req: Request) {
     try {
@@ -51,34 +54,80 @@ export async function POST(req: Request) {
             // Payment Success
             await dbConnect();
 
-            // Assuming order_id is the Booking ID
-            // If we use a custom order ID format (e.g., BOOKING_ID_TIMESTAMP), we need to extract the Booking ID
-            // For simplicity, let's assume order_id passed to PayHere is the Booking ID (mongodb _id)
+            // The order_id passed from frontend is the paymentGroupId
+            const paymentGroupId = order_id;
 
-            const booking = await Booking.findById(order_id);
-
-            if (!booking) {
-                console.error(`Booking not found for order_id: ${order_id}`);
-                return NextResponse.json({ error: 'Booking not found' }, { status: 404 });
-            }
-
-            // Update booking status
-            // custom_2 could store 'advanced_paid' or 'full_paid' if we passed it
-            // Or we can infer from amount vs totalAmount
-
-            // Let's assume we pass the intended status in custom_2 or just mark as advanced_paid/full_paid based on context
-            // Re-evaluating: In PaymentForm, we decide isAdvance. 
-            // Ideally, we should pass this info to PayHere in a custom field (custom_1 or custom_2)
-
+            // Update all bookings with this paymentGroupId
             const paymentStatus = custom_1 === 'advance' ? 'advanced_paid' : 'full_paid';
 
-            booking.paymentStatus = paymentStatus;
-            booking.status = 'confirmed'; // Confirming the booking on payment
-            // You might want to save payment_id as well if you add a field to the schema
+            const result = await Booking.updateMany(
+                { paymentGroupId: paymentGroupId },
+                {
+                    $set: {
+                        paymentStatus: paymentStatus,
+                        status: 'confirmed',
+                        payherePaymentId: payment_id,
+                        paidAmount: parseFloat(payhere_amount)
+                    }
+                }
+            );
 
-            await booking.save();
+            if (result.matchedCount === 0) {
+                console.error(`Bookings not found for paymentGroupId: ${paymentGroupId}`);
+                // We still return 200 to PayHere because the signature was valid, 
+                // but we should investigate why the paymentGroupId didn't match.
+            } else {
+                console.log(`Updated ${result.modifiedCount} bookings for paymentGroupId ${paymentGroupId} to ${paymentStatus} (Payment ID: ${payment_id}, Amount: ${payhere_amount})`);
 
-            console.log(`Booking ${order_id} updated to ${paymentStatus}`);
+                // ✅ Send Confirmation Emails
+                try {
+                    // Fetch updated bookings with populated ground and owner info
+                    const updatedBookings = await Booking.find({ paymentGroupId: paymentGroupId })
+                        .populate({
+                            path: 'ground',
+                            populate: { path: 'owner' }
+                        });
+
+                    if (updatedBookings.length > 0) {
+                        const firstBooking = updatedBookings[0];
+                        const groundInfo = firstBooking.ground as unknown as IGround;
+                        const ownerInfo = groundInfo?.owner as unknown as IUser;
+                        const guestInfo = firstBooking.guest;
+
+                        const bookingDetails = updatedBookings.map(b => `${b.date}: ${b.timeSlots.map(ts => ts.startTime).join(', ')}`).join('\n');
+
+                        // 1. Send to Guest
+                        if (guestInfo?.email) {
+                            await sendBookingConfirmationEmail({
+                                to: guestInfo.email,
+                                subject: "Your Booking is Confirmed! - BookIndoor",
+                                userName: guestInfo.name,
+                                groundName: groundInfo.name,
+                                bookingDate: updatedBookings.length > 1 ? "Multiple Dates" : firstBooking.date,
+                                bookingTime: bookingDetails,
+                                amount: `Rs. ${payhere_amount}`,
+                            });
+                        }
+
+                        // 2. Send to Ground Owner
+                        if (ownerInfo?.email) {
+                            await sendBookingConfirmationEmail({
+                                to: ownerInfo.email,
+                                subject: "New Confirmed Booking Received - BookIndoor",
+                                userName: ownerInfo.name,
+                                groundName: groundInfo.name,
+                                bookingDate: updatedBookings.length > 1 ? "Multiple Dates" : firstBooking.date,
+                                bookingTime: bookingDetails,
+                                amount: `Rs. ${payhere_amount}`,
+                                text: `Hi ${ownerInfo.name},\n\nYou have received a new confirmed booking for ${groundInfo.name}.\n\nUser: ${guestInfo?.name}\nDates/Times:\n${bookingDetails}\nTotal Paid: Rs. ${payhere_amount}\n\nPlease check your admin panel for details.`
+                            });
+                        }
+                    }
+                } catch (emailError) {
+                    console.error("Failed to send confirmation emails:", emailError);
+                    // We don't fail the whole request because the payment was already recorded in DB
+                }
+            }
         }
 
         return NextResponse.json({ success: true });
