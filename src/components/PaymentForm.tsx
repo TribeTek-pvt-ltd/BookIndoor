@@ -212,10 +212,10 @@ export default function PaymentForm({
     <div className="w-full max-w-4xl mx-auto">
       <form
         onSubmit={handleBooking}
-        className="p-4 sm:p-8 border border-green-700/30 rounded-[1.5rem] sm:rounded-[2rem] space-y-6 bg-green-50/30 shadow-lg"
+        className="p-4 sm:p-8  space-y-6 "
       >
         {/* Booking Summary */}
-        <div className="bg-green-50 p-5 rounded-xl border border-green-200 shadow-inner">
+        <div className=" p-5 ">
           <h3 className="font-semibold text-green-800 mb-3 text-lg">
             Booking Summary
           </h3>
@@ -263,7 +263,7 @@ export default function PaymentForm({
               ? "bg-green-700 text-white"
               : "bg-green-100 text-green-700 border border-green-300"
               }`}>
-            {isAdvance ? "Cancel Advance Payment" : "Pay 50% Advance"}
+            {isAdvance ? "Pay Full Payment" : "Pay 50% Advance"}
           </button>
         </div>
 

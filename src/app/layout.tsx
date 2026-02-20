@@ -7,7 +7,13 @@ export const metadata: Metadata = {
   description: "Book indoor grounds easily",
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({
+  children,
+  modal,
+}: {
+  children: React.ReactNode;
+  modal: React.ReactNode;
+}) {
   return (
     <html lang="en">
       <head>
@@ -20,7 +26,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <Header />
 
         {/* ✅ Full-width, full-height main content */}
-        <main className="flex-1 w-full">{children}</main>
+        <main className="flex-1 w-full">
+          {children}
+          {modal}
+        </main>
 
         {/* Footer always at the bottom */}
         <footer className="w-full bg-green-100 text-center py-4 text-sm text-green-800 border-t border-green-200">
@@ -28,6 +37,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <span className="font-semibold">BookIndoor</span>. All rights reserved.
         </footer>
       </body>
-    </html >
+    </html>
   );
 }

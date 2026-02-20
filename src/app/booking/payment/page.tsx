@@ -19,7 +19,7 @@ interface BookingDetails {
     amount: number;
 }
 
-export default function PaymentPage() {
+export default function PaymentPage({ isModal = false }: { isModal?: boolean }) {
     const router = useRouter();
     const [bookingDetails, setBookingDetails] = useState<BookingDetails | null>(null);
     const [loading, setLoading] = useState(true);
@@ -41,7 +41,7 @@ export default function PaymentPage() {
 
     if (loading) {
         return (
-            <div className="flex items-center justify-center min-h-screen bg-slate-50">
+            <div className={`flex items-center justify-center ${isModal ? "p-12" : "min-h-screen bg-slate-50"}`}>
                 <div className="w-16 h-16 rounded-full border-4 border-slate-200 border-t-emerald-600 animate-spin"></div>
             </div>
         );
@@ -52,15 +52,15 @@ export default function PaymentPage() {
     }
 
     return (
-        <div className="bg-slate-50 py-8 px-4 sm:px-6 lg:px-8 flex flex-col justify-center">
-            <div className="max-w-4xl mx-auto">
+        <div className={`${isModal ? "" : "bg-slate-50 py-8 px-4 sm:px-6 lg:px-8"} flex flex-col justify-center`}>
+            <div className={isModal ? "w-full" : "max-w-4xl mx-auto"}>
 
 
                 <div className="w-full">
-                    <div className="bg-white rounded-[2rem] shadow-xl border border-slate-100 overflow-hidden">
-                        <div className="bg-emerald-600 p-6 sm:p-8 text-white">
+                    <div className={`${isModal ? "" : "bg-white rounded-[2rem] shadow-xl border border-slate-100"} overflow-hidden`}>
+                        <div className="p-6 sm:p-8 text-center">
                             <h1 className="text-2xl sm:text-3xl font-black font-outfit">Complete Your Booking</h1>
-                            <p className="text-emerald-100 mt-1 sm:mt-2 font-medium text-sm sm:base">
+                            <p className="mt-1 sm:mt-2 font-medium text-sm sm:base">
                                 Please review your details and proceed to payment.
                             </p>
                         </div>
