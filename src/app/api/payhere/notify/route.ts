@@ -15,6 +15,12 @@ export async function POST(req: Request) {
             data[key] = value;
         });
 
+        console.log("📢 PayHere Notify Received:", {
+            order_id: data.order_id,
+            status_code: data.status_code,
+            amount: data.payhere_amount
+        });
+
         const {
             merchant_id,
             order_id,
@@ -23,8 +29,8 @@ export async function POST(req: Request) {
             payhere_currency,
             status_code,
             md5sig,
-            custom_1, // Assuming custom_1 is used to pass booking ID if order_id is not the booking ID
-            custom_2 // Assuming custom_2 is used to pass payment type (advance/full)
+            custom_1, // payment type (advance/full)
+            custom_2
         } = data;
 
         const merchantSecret = process.env.PAYHERE_MERCHANT_SECRET;
@@ -72,10 +78,10 @@ export async function POST(req: Request) {
                 }
             );
 
+            console.log(`📝 Update result for paymentGroupId ${paymentGroupId}:`, result);
+
             if (result.matchedCount === 0) {
                 console.error(`Bookings not found for paymentGroupId: ${paymentGroupId}`);
-                // We still return 200 to PayHere because the signature was valid, 
-                // but we should investigate why the paymentGroupId didn't match.
             } else {
                 console.log(`Updated ${result.modifiedCount} bookings for paymentGroupId ${paymentGroupId} to ${paymentStatus} (Payment ID: ${payment_id}, Amount: ${payhere_amount})`);
 
@@ -88,18 +94,22 @@ export async function POST(req: Request) {
                             populate: { path: 'owner' }
                         });
 
+                    console.log(`🔍 Found ${updatedBookings.length} bookings for email notification.`);
+
                     if (updatedBookings.length > 0) {
                         const firstBooking = updatedBookings[0];
                         const groundInfo = firstBooking.ground as unknown as IGround;
                         const ownerInfo = groundInfo?.owner as unknown as IUser;
                         const guestInfo = firstBooking.guest;
 
-                        const bookingDetails = updatedBookings.map(b => `${b.date}: ${b.timeSlots.map(ts => ts.startTime).join(', ')}`).join('\n');
+                        const bookingDetails = updatedBookings.map(b => `${b.date}: ${b.timeSlots.map(ts => (ts as any).startTime).join(', ')}`).join('\n');
 
                         // 1. Send to Guest
                         if (guestInfo?.email) {
                             const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
                             const cancellationLink = `${baseUrl}/booking/cancel?id=${paymentGroupId}`;
+
+                            console.log(`📧 Sending guest email to ${guestInfo.email}. Cancellation Link: ${cancellationLink}`);
 
                             await sendBookingConfirmationEmail({
                                 to: guestInfo.email,
@@ -115,6 +125,7 @@ export async function POST(req: Request) {
 
                         // 2. Send to Ground Owner
                         if (ownerInfo?.email) {
+                            console.log(`📧 Sending owner email to ${ownerInfo.email}`);
                             await sendBookingConfirmationEmail({
                                 to: ownerInfo.email,
                                 subject: "New Confirmed Booking Received - BookIndoor",
@@ -128,8 +139,7 @@ export async function POST(req: Request) {
                         }
                     }
                 } catch (emailError) {
-                    console.error("Failed to send confirmation emails:", emailError);
-                    // We don't fail the whole request because the payment was already recorded in DB
+                    console.error("❌ Failed to send confirmation emails:", emailError);
                 }
             }
         }
