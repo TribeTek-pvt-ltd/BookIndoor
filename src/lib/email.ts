@@ -9,6 +9,7 @@ interface EmailData {
   bookingTime: string;
   amount: number | string;
   text?: string; // ✅ Optional plain-text version
+  cancellationLink?: string; // ✅ Optional cancellation link
 }
 
 export async function sendBookingConfirmationEmail({
@@ -20,6 +21,7 @@ export async function sendBookingConfirmationEmail({
   bookingTime,
   amount,
   text,
+  cancellationLink,
 }: EmailData) {
   try {
     // Validate recipient email
@@ -74,6 +76,13 @@ export async function sendBookingConfirmationEmail({
             
             <p style="font-size: 15px; line-height: 1.5;">We look forward to seeing you at the ground! If you need to make any changes, please contact the ground admin directly.</p>
             
+            ${cancellationLink ? `
+            <div style="margin: 30px 0; text-align: center;">
+              <p style="font-size: 14px; color: #666; margin-bottom: 15px;">Need to cancel? You can cancel your booking up to 24 hours before the scheduled time.</p>
+              <a href="${cancellationLink}" style="background-color: #d9534f; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">Cancel Booking</a>
+            </div>
+            ` : ''}
+
             <p style="margin-top: 30px; font-size: 15px;">Thank you for choosing <strong>BookIndoor</strong>!</p>
             
             <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #eeeeee; font-size: 13px; color: #888; text-align: center;">

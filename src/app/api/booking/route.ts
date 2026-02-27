@@ -67,6 +67,7 @@ export async function POST(req: Request) {
       const existing = await Booking.find({
         ground: body.ground,
         date: item.date,
+        status: { $ne: 'cancelled' },
         "timeSlots.startTime": { $in: item.timeSlots.map((t) => t.startTime) },
       });
 
@@ -197,7 +198,7 @@ export async function GET(req: Request) {
     const timeSlots = generateTimeSlots(from, to);
 
     // 📅 Get Bookings for that specific date and ground
-    const bookings = await Booking.find({ ground: groundId, date });
+    const bookings = await Booking.find({ ground: groundId, date, status: { $ne: "cancelled" } });
 
     // Flatten booked slots
     const bookedSet = new Set(

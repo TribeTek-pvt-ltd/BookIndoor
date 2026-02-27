@@ -16,7 +16,7 @@ export interface IBooking extends Document {
   };
   date: string; // "YYYY-MM-DD"
   timeSlots: ITimeSlot[];
-  status: "reserved" | "confirmed";
+  status: "reserved" | "confirmed" | "cancelled";
   paymentStatus: "pending" | "advanced_paid" | "full_paid";
   paymentGroupId?: string;
   payherePaymentId?: string; // ✅ Track PayHere transaction ID
@@ -47,7 +47,7 @@ const BookingSchema = new Schema<IBooking>(
     timeSlots: { type: [TimeSlotSchema], required: true },
     status: {
       type: String,
-      enum: ["reserved", "confirmed"],
+      enum: ["reserved", "confirmed", "cancelled"],
       default: "reserved",
     },
     paymentStatus: {

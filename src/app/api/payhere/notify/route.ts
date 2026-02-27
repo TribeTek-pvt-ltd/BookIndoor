@@ -98,6 +98,9 @@ export async function POST(req: Request) {
 
                         // 1. Send to Guest
                         if (guestInfo?.email) {
+                            const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+                            const cancellationLink = `${baseUrl}/booking/cancel?id=${paymentGroupId}`;
+
                             await sendBookingConfirmationEmail({
                                 to: guestInfo.email,
                                 subject: "Your Booking is Confirmed! - BookIndoor",
@@ -106,6 +109,7 @@ export async function POST(req: Request) {
                                 bookingDate: updatedBookings.length > 1 ? "Multiple Dates" : firstBooking.date,
                                 bookingTime: bookingDetails,
                                 amount: `Rs. ${payhere_amount}`,
+                                cancellationLink: cancellationLink,
                             });
                         }
 
