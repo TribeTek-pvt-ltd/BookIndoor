@@ -137,6 +137,22 @@ export async function POST(req: Request) {
                                 text: `Hi ${ownerInfo.name},\n\nYou have received a new confirmed booking for ${groundInfo.name}.\n\nUser: ${guestInfo?.name}\nDates/Times:\n${bookingDetails}\nTotal Paid: Rs. ${payhere_amount}\n\nPlease check your admin panel for details.`
                             });
                         }
+
+                        // 3. Send to System Admin
+                        const systemAdminEmail = process.env.EMAIL_USER;
+                        if (systemAdminEmail) {
+                            console.log(`📧 Sending system admin email to ${systemAdminEmail}`);
+                            await sendBookingConfirmationEmail({
+                                to: systemAdminEmail,
+                                subject: "System Alert: New Booking Confirmed - BookIndoor",
+                                userName: "System Admin",
+                                groundName: groundInfo.name,
+                                bookingDate: updatedBookings.length > 1 ? "Multiple Dates" : firstBooking.date,
+                                bookingTime: bookingDetails,
+                                amount: `Rs. ${payhere_amount}`,
+                                text: `System Notification:\n\nA new booking has been confirmed on the platform.\n\nGround: ${groundInfo.name}\nOwner: ${ownerInfo?.name} (${ownerInfo?.email})\nUser: ${guestInfo?.name} (${guestInfo?.email})\nDates/Times:\n${bookingDetails}\nTotal Paid: Rs. ${payhere_amount}`
+                            });
+                        }
                     }
                 } catch (emailError) {
                     console.error("❌ Failed to send confirmation emails:", emailError);

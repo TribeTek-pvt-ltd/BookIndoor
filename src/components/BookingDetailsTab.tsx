@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { EyeIcon, CalendarIcon } from "@heroicons/react/24/outline";
+import { EyeIcon, CalendarIcon, CheckIcon } from "@heroicons/react/24/outline";
 
 interface Booking {
   id: number | string;
@@ -127,6 +127,38 @@ export default function BookingDetailsTab({
     }
   };
 
+  const confirmBooking = async (bookingId: number | string) => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) return;
+
+      if (!confirm("Are you sure you want to confirm this booking and send confirmation emails?")) return;
+
+      const res = await fetch(`/api/booking/${bookingId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          token,
+          bookingStatus: "confirmed"
+        }),
+      });
+
+      if (!res.ok) throw new Error("Failed to confirm booking");
+
+      // Optimistic update
+      setBookings(prev => prev.map(b =>
+        b.id === bookingId ? { ...b, bookingStatus: "Confirmed" } : b
+      ));
+
+      alert("Booking confirmed and emails sent!");
+    } catch (err) {
+      console.error("Confirmation failed", err);
+      alert("Failed to confirm booking");
+    }
+  };
+
   const renderBookingsTable = (items: Booking[]) => (
     <div className="overflow-x-auto">
       <table className="w-full text-left border-collapse min-w-[800px]">
@@ -224,12 +256,26 @@ export default function BookingDetailsTab({
                 </div>
               </td>
               <td className="p-4 text-right">
-                <button
-                  onClick={() => setSelectedBooking(booking)}
-                  className="p-2 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all"
-                >
-                  <EyeIcon className="w-5 h-5" />
-                </button>
+                <div className="flex items-center justify-end gap-1">
+                  {booking.bookingStatus !== "Confirmed" && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        confirmBooking(booking.id);
+                      }}
+                      title="Confirm Booking"
+                      className="p-2 text-emerald-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all"
+                    >
+                      <CheckIcon className="w-5 h-5" />
+                    </button>
+                  )}
+                  <button
+                    onClick={() => setSelectedBooking(booking)}
+                    className="p-2 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all"
+                  >
+                    <EyeIcon className="w-5 h-5" />
+                  </button>
+                </div>
               </td>
             </tr>
           ))}
