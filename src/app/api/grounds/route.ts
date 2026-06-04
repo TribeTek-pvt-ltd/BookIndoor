@@ -3,110 +3,87 @@ import dbConnect from "@/lib/mongodb";
 import Ground from "@/models/Grounds";
 import { verifyToken } from "@/lib/auth";
 import cloudinary from "@/lib/cloudinary";
-
-interface SportInput {
-  name: string;
-  pricePerHour: number;
-}
+import { GroundSchema } from "@/lib/schemas";
 
 // ✅ CREATE Ground
 export async function POST(req: Request) {
   try {
     await dbConnect();
 
-    const formData = await req.formData();
+    // 1. Auth check from headers
+    const authHeader = req.headers.get("Authorization");
+    const token = authHeader?.split(" ")[1];
+    const decoded = token ? verifyToken(token) : null;
 
-    const token = formData.get("token") as string;
-    const name = formData.get("name") as string;
-    const contactNumber = formData.get("contactNumber") as string;
-    const groundType = formData.get("groundType") as string;
-
-    // ✅ Token check
-    const decoded = verifyToken(token);
     if (!decoded || !["admin", "super_admin"].includes(decoded.role)) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
 
-    // ✅ Owner fallback
-    const ownerId = (formData.get("ownerId") as string) || decoded.id;
+    const formData = await req.formData();
+    
+    // 2. Extract and Parse Data
+    const rawSports = formData.get("sports");
+    const rawAmenities = formData.get("amenities");
+    const rawLocation = {
+      address: formData.get("location[address]"),
+      lat: formData.get("location[lat]"),
+      lng: formData.get("location[lng]"),
+    };
+    const rawAvailableTime = {
+      from: formData.get("availableTime[from]"),
+      to: formData.get("availableTime[to]"),
+    };
 
-    if (!name || !contactNumber || !groundType || !ownerId) {
+    const payload = {
+      name: formData.get("name"),
+      contactNumber: formData.get("contactNumber"),
+      groundType: formData.get("groundType"),
+      owner: (formData.get("ownerId") as string) || decoded.id,
+      sports: rawSports ? JSON.parse(rawSports as string) : [],
+      amenities: rawAmenities ? JSON.parse(rawAmenities as string) : [],
+      location: {
+        address: rawLocation.address,
+        lat: rawLocation.lat ? Number(rawLocation.lat) : undefined,
+        lng: rawLocation.lng ? Number(rawLocation.lng) : undefined,
+      },
+      availableTime: rawAvailableTime,
+      description: formData.get("description"),
+    };
+
+    // 3. Validate with Zod
+    const validation = GroundSchema.safeParse(payload);
+    if (!validation.success) {
       return NextResponse.json(
-        { error: "Missing required fields: name, contact, type, or owner" },
+        { error: "Validation Failed", details: validation.error.format() },
         { status: 400 }
       );
     }
 
-    const location = {
-      address: formData.get("location[address]") as string,
-      lat: formData.get("location[lat]") ? Number(formData.get("location[lat]")) : undefined,
-      lng: formData.get("location[lng]") ? Number(formData.get("location[lng]")) : undefined,
-    };
-
-    if (!location.address) {
-      return NextResponse.json({ error: "Location address is required" }, { status: 400 });
-    }
-
-    const availableTime = {
-      from: formData.get("availableTime[from]") as string,
-      to: formData.get("availableTime[to]") as string,
-    };
-
-    if (!availableTime.from || !availableTime.to) {
-      return NextResponse.json({ error: "Available time is required" }, { status: 400 });
-    }
-
-    const sportsRaw = formData.get("sports");
-    const sports = sportsRaw ? (JSON.parse(sportsRaw as string) as SportInput[]) : [];
-
-    if (sports.length === 0 || sports.some(s => !s.name || !s.pricePerHour)) {
-      return NextResponse.json({ error: "Valid sports list is required" }, { status: 400 });
-    }
-
-    const amenitiesRaw = formData.get("amenities");
-    const amenities = amenitiesRaw ? (JSON.parse(amenitiesRaw as string) as string[]) : [];
-
-    // ✅ Upload images to Cloudinary
-    const images: string[] = [];
+    // 4. Upload images in parallel
     const files = formData.getAll("images") as File[];
-
-    for (const file of files) {
-      if (!(file instanceof File)) continue;
-      const arrayBuffer = await file.arrayBuffer();
-      const buffer = Buffer.from(arrayBuffer);
-      const base64 = buffer.toString("base64");
-      const dataURI = `data:${file.type};base64,${base64}`;
-
-      const uploadRes = await cloudinary.uploader.upload(dataURI, {
-        folder: "grounds",
+    const uploadPromises = files
+      .filter(file => file instanceof File)
+      .map(async (file) => {
+        const arrayBuffer = await file.arrayBuffer();
+        const buffer = Buffer.from(arrayBuffer);
+        const dataURI = `data:${file.type};base64,${buffer.toString("base64")}`;
+        const res = await cloudinary.uploader.upload(dataURI, { folder: "grounds" });
+        return res.secure_url;
       });
 
-      images.push(uploadRes.secure_url);
-    }
+    const images = await Promise.all(uploadPromises);
 
+    // 5. Create Database Entry
     const ground = await Ground.create({
-      name,
-      location,
-      contactNumber,
-      groundType,
-      owner: ownerId,
-      sports,
-      availableTime,
-      amenities,
+      ...validation.data,
       images,
     });
 
-    return NextResponse.json({ success: true, ground });
-  } catch (err: unknown) {
+    return NextResponse.json({ success: true, ground }, { status: 201 });
+  } catch (err: any) {
     console.error("Ground Creation Error:", err);
-    if (err instanceof Error && err.name === "ValidationError") {
-      return NextResponse.json(
-        { error: "Validation Failed", details: err.message },
-        { status: 400 }
-      );
-    }
     return NextResponse.json(
-      { error: "Failed to create ground" },
+      { error: err.message || "Failed to create ground" },
       { status: 500 }
     );
   }
@@ -118,26 +95,40 @@ export async function GET(req: Request) {
     await dbConnect();
 
     const authHeader = req.headers.get("Authorization");
-    const token = authHeader?.split(" ")[1]; // Bearer token
-
+    const token = authHeader?.split(" ")[1];
     const decoded = token ? verifyToken(token) : null;
 
-    let grounds;
-    if (decoded && decoded.role === "super_admin") {
-      grounds = await Ground.find().populate("owner", "name email role");
-    } else if (decoded && decoded.role === "admin") {
-      grounds = await Ground.find({ owner: decoded.id }).populate(
-        "owner",
-        "name email"
-      );
-    } else {
-      grounds = await Ground.find().select(
-        "name location sports images availableTime"
-      );
+    let query = {};
+    let projection = {};
+
+    if (decoded?.role === "super_admin") {
+      // Super admin sees everything
+      const grounds = await Ground.find()
+        .populate("owner", "name email role")
+        .lean();
+      return NextResponse.json(grounds);
+    } 
+    
+    if (decoded?.role === "admin") {
+      // Admin sees their own grounds
+      const grounds = await Ground.find({ owner: decoded.id })
+        .populate("owner", "name email")
+        .lean();
+      return NextResponse.json(grounds);
     }
 
+    // Public view: limited fields for better performance
+    const grounds = await Ground.find({}, {
+      name: 1,
+      location: 1,
+      sports: 1,
+      images: 1,
+      availableTime: 1,
+      groundType: 1
+    }).lean();
+
     return NextResponse.json(grounds);
-  } catch (err: unknown) {
+  } catch (err: any) {
     console.error("Ground Fetch Error:", err);
     return NextResponse.json(
       { error: "Failed to fetch grounds" },
@@ -145,3 +136,4 @@ export async function GET(req: Request) {
     );
   }
 }
+

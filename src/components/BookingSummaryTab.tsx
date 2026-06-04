@@ -5,10 +5,8 @@ interface BookingSummaryTabProps {
   groundId?: string;
 }
 
-
-
 import React, { useState, useEffect } from "react";
-
+import { motion } from "framer-motion";
 
 interface SummaryStats {
   income: number;
@@ -61,76 +59,112 @@ export default function BookingSummaryTab({ selectedSport, groundId }: BookingSu
   }, [groundId]);
 
   if (loading) return (
-    <div className="flex justify-center py-10">
-      <div className="w-8 h-8 border-4 border-emerald-600 border-t-transparent rounded-full animate-spin"></div>
+    <div className="flex justify-center py-20">
+      <div className="w-12 h-12 border-4 border-emerald-500/30 border-t-emerald-500 rounded-full animate-spin"></div>
     </div>
   );
 
   if (!summaryData) return (
-    <div className="bg-slate-50 border-2 border-dashed border-slate-200 rounded-2xl p-10 text-center">
-      <p className="text-slate-500 font-medium">No statistical data available yet.</p>
+    <div className="glass-card p-12 text-center flex flex-col items-center justify-center min-h-[300px]">
+      <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mb-4">
+        <span className="text-2xl">📊</span>
+      </div>
+      <h3 className="text-xl font-bold font-outfit text-slate-800 mb-2">No Data Available</h3>
+      <p className="text-slate-500 font-medium max-w-sm">There are no statistical records found for the selected criteria yet.</p>
     </div>
   );
 
   const renderSummaryCards = (data: Record<string, SummaryStats>) => (
-    <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-      {Object.entries(data).map(([period, stats]: [string, SummaryStats]) => (
-        <div key={period} className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
-          <div className="flex flex-col items-center text-center space-y-4">
-            <span className="px-3 py-1 bg-slate-100 text-slate-500 text-[10px] font-bold rounded-full uppercase tracking-widest">
+    <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 lg:gap-8">
+      {Object.entries(data).map(([period, stats]: [string, SummaryStats], idx) => (
+        <motion.div 
+          key={period} 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: idx * 0.1 }}
+          className="glass-card p-6 flex flex-col h-full"
+        >
+          <div className="flex flex-col items-center text-center space-y-6 flex-1">
+            <span className="px-4 py-1.5 bg-emerald-50 text-emerald-600 text-[10px] font-black rounded-full uppercase tracking-widest shadow-sm border border-emerald-100/50">
               {period}
             </span>
 
             <div className="space-y-1">
-              <p className="text-xs font-medium text-slate-400">Total Income</p>
-              <p className="text-2xl font-black text-emerald-600">
+              <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Total Revenue</p>
+              <p className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-br from-slate-800 to-slate-600 font-outfit">
                 Rs. {stats.income.toLocaleString()}
               </p>
             </div>
 
-            <div className="w-full pt-3 border-t border-slate-50">
-              <p className="text-xs font-bold text-slate-700">
-                {stats.totalBookings} <span className="text-slate-400 font-medium">Bookings</span>
-              </p>
-            </div>
+            <div className="w-full pt-4 border-t border-slate-100/50 flex flex-col items-center">
+              <div className="flex items-baseline gap-2 mb-4">
+                <span className="text-2xl font-black text-emerald-500 font-outfit">{stats.totalBookings}</span>
+                <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Total Bookings</span>
+              </div>
 
-            <div className="w-full space-y-1.5 pt-1">
-              {Object.entries(stats.sports || {}).map(([sport, count]) => (
-                <div
-                  key={sport}
-                  className={`flex justify-between items-center text-[10px] p-2 rounded-lg transition-colors ${selectedSport === sport
-                    ? "bg-emerald-50 text-emerald-700 font-bold"
-                    : "bg-slate-50 text-slate-600"
-                    }`}
-                >
-                  <span>{sport}</span>
-                  <span className="bg-white px-1.5 py-0.5 rounded-full shadow-sm">{count}</span>
-                </div>
-              ))}
+              <div className="w-full space-y-2 mt-auto">
+                {Object.entries(stats.sports || {}).map(([sport, count]) => (
+                  <div
+                    key={sport}
+                    className={`flex justify-between items-center text-xs p-2.5 rounded-xl transition-all ${selectedSport === sport
+                      ? "bg-emerald-500 text-white font-bold shadow-md shadow-emerald-500/20"
+                      : "bg-slate-50/80 text-slate-600 border border-slate-100 hover:bg-slate-100"
+                      }`}
+                  >
+                    <span className="font-semibold">{sport}</span>
+                    <span className={`px-2 py-0.5 rounded-lg font-bold ${selectedSport === sport ? "bg-emerald-600" : "bg-white text-slate-800 shadow-sm"}`}>
+                      {count}
+                    </span>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
-        </div>
+        </motion.div>
       ))}
     </div>
   );
 
   return (
-    <div className="space-y-12">
-      {!groundId && groundWiseStats.length > 0 ? (
-        groundWiseStats.map((gw) => (
-          <div key={gw.groundId} className="space-y-6">
-            <div className="flex items-center gap-4">
-              <h3 className="text-xl font-bold text-slate-800">{gw.groundName}</h3>
-              <div className="h-px flex-1 bg-slate-100"></div>
-              <p className="text-sm font-semibold text-emerald-600">
-                Total Revenue: Rs. {gw.totalRevenue.toLocaleString()}
-              </p>
-            </div>
-            {renderSummaryCards(gw.summary)}
+    <div className="space-y-12 py-4">
+      {/* Global Summary */}
+      <div>
+        <h2 className="text-xl font-black text-slate-800 mb-6 px-2">Platform Overview</h2>
+        {renderSummaryCards(summaryData)}
+      </div>
+
+      {/* Ground-wise Breakdown */}
+      {!groundId && groundWiseStats && groundWiseStats.length > 0 && (
+        <div className="space-y-6 pt-8 border-t border-slate-100">
+          <h2 className="text-xl font-black text-slate-800 px-2">Facility Revenue Breakdown</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {groundWiseStats.map((gw, idx) => (
+              <motion.div 
+                key={gw.groundId} 
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: idx * 0.1 }}
+                className="flex items-center justify-between gap-4 bg-white p-5 rounded-2xl border border-slate-100 shadow-sm"
+              >
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center text-white shadow-lg shadow-emerald-500/20">
+                    <span className="text-xl font-black font-outfit">{gw.groundName.charAt(0)}</span>
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold font-outfit text-slate-800 leading-tight">{gw.groundName}</h3>
+                    <p className="text-xs font-bold text-slate-400 mt-0.5">{gw.totalBookings} Total Bookings</p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className="text-sm font-black text-emerald-600">
+                    Rs. {gw.totalRevenue.toLocaleString()}
+                  </p>
+                  <span className="text-[9px] font-black uppercase tracking-widest text-emerald-400">Total Revenue</span>
+                </div>
+              </motion.div>
+            ))}
           </div>
-        ))
-      ) : (
-        renderSummaryCards(summaryData)
+        </div>
       )}
     </div>
   );

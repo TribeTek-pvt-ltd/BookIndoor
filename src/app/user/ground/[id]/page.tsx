@@ -201,12 +201,12 @@ export default function UserGroundDetails() {
           {/* Navigation Arrows */}
           <button
             onClick={prevImage}
-            className="absolute top-1/2 left-4 -translate-y-1/2 w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center bg-white/20 backdrop-blur-md border border-white/30 rounded-full text-white shadow-xl hover:bg-white/40 transition-all opacity-0 group-hover:opacity-100">
+            className="absolute top-1/2 left-4 -translate-y-1/2 w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center bg-white/20 backdrop-blur-md border border-white/30 rounded-full text-white shadow-xl">
             <ChevronLeftIcon className="w-6 h-6" />
           </button>
           <button
             onClick={nextImage}
-            className="absolute top-1/2 right-4 -translate-y-1/2 w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center bg-white/20 backdrop-blur-md border border-white/30 rounded-full text-white shadow-xl hover:bg-white/40 transition-all opacity-0 group-hover:opacity-100">
+            className="absolute top-1/2 right-4 -translate-y-1/2 w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center bg-white/20 backdrop-blur-md border border-white/30 rounded-full text-white shadow-xl">
             <ChevronRightIcon className="w-6 h-6" />
           </button>
 
@@ -216,7 +216,7 @@ export default function UserGroundDetails() {
               <button
                 key={i}
                 onClick={() => setCurrentImage(i)}
-                className={`w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-xl transition-all ${currentImage === i ? "bg-white w-6" : "bg-white/50 hover:bg-white/80"}`}
+                className={`w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-xl ${currentImage === i ? "bg-white w-6" : "bg-white/50"}`}
               />
             ))}
           </div>
@@ -232,7 +232,7 @@ export default function UserGroundDetails() {
               {role === "admin" && (
                 <button
                   onClick={() => setShowEditModal(true)}
-                  className="p-2 text-slate-400 hover:text-emerald-600 transition-colors"
+                  className="p-2 text-slate-400"
                   title="Edit Details"
                 >
                   <PencilSquareIcon className="w-6 h-6" />
@@ -253,7 +253,7 @@ export default function UserGroundDetails() {
                     href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(ground.location.address)}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-emerald-600 hover:text-emerald-700 font-bold ml-2 underline-offset-4 hover:underline transition-all">
+                    className="text-emerald-600 font-bold ml-2 underline-offset-4">
                     Navigate
                   </a>
                 </span>
@@ -270,7 +270,7 @@ export default function UserGroundDetails() {
               {ground.amenities.map((facility) => (
                 <div
                   key={facility}
-                  className="px-3 sm:px-4 py-2 bg-white border border-slate-200 text-slate-700 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-2 shadow-sm hover:border-emerald-200 transition-all cursor-default">
+                  className="px-3 sm:px-4 py-2 bg-white border border-slate-200 text-slate-700 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-2 shadow-sm cursor-default">
                   {facilityIcons[facility] || <HomeIcon className="w-4 h-4 text-emerald-600" />}
                   {facility}
                 </div>
@@ -301,9 +301,9 @@ export default function UserGroundDetails() {
                 setBookingDetails(null);
                 setShowCalendarModal(true);
               }}
-              className={`group relative p-6 rounded-xl border-2 transition-all duration-300 text-left ${selectedSport === sport.name
+              className={`group relative p-6 rounded-xl border-2 text-left ${selectedSport === sport.name
                 ? "bg-emerald-600 border-emerald-600 shadow-xl shadow-emerald-200 scale-105"
-                : "bg-white border-slate-100 hover:border-emerald-200 hover:shadow-lg"
+                : "bg-white border-slate-100"
                 }`}
             >
               <div
@@ -347,37 +347,61 @@ export default function UserGroundDetails() {
       </div>
 
       {/* 📅 Calendar Modal */}
-      {showCalendarModal && selectedSport && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="bg-white rounded-xl w-11/12 max-w-lg p-6 relative">
-            <button
+      <AnimatePresence>
+        {showCalendarModal && selectedSport && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
               onClick={() => setShowCalendarModal(false)}
-              className="absolute top-4 right-4 text-gray-500 hover:text-gray-700">
-              <XMarkIcon className="w-6 h-6" />
-            </button>
-            <h3 className="text-xl font-semibold mb-4">
-              Booking Calendar – {selectedSport}
-            </h3>
-            <Calendar
-              groundId={id}
-              groundName={ground.name}
-              onConfirmBookings={(bookings) => {
-                const amount = calculateAmount(bookings);
-                sessionStorage.setItem("pendingBooking", JSON.stringify({
-                  groundId: id,
-                  sportName: selectedSport || "",
-                  groundName: ground.name,
-                  location: ground.location.address,
-                  bookings: bookings,
-                  amount: amount,
-                }));
-                setShowCalendarModal(false);
-                router.push("/booking/payment");
-              }}
+              className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
             />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              transition={{ type: "spring", damping: 25, stiffness: 300 }}
+              className="relative w-full max-w-lg bg-white rounded-[2rem] shadow-2xl overflow-hidden border border-slate-100 flex flex-col p-6 sm:p-8"
+            >
+              <button
+                onClick={() => setShowCalendarModal(false)}
+                className="absolute top-6 right-6 w-10 h-10 flex items-center justify-center bg-slate-50 text-slate-400 rounded-xl z-10"
+              >
+                <XMarkIcon className="w-6 h-6" />
+              </button>
+              
+              <div className="mb-4 pr-12">
+                <span className="text-emerald-500 text-[10px] font-black uppercase tracking-widest block mb-1">Book Venue</span>
+                <h3 className="text-2xl font-black text-slate-800 font-outfit">
+                  {selectedSport}
+                </h3>
+              </div>
+              
+              <div className="mt-2">
+                <Calendar
+                  groundId={id}
+                  groundName={ground.name}
+                  isEmbedded={true}
+                  onConfirmBookings={(bookings) => {
+                    const amount = calculateAmount(bookings);
+                    sessionStorage.setItem("pendingBooking", JSON.stringify({
+                      groundId: id,
+                      sportName: selectedSport || "",
+                      groundName: ground.name,
+                      location: ground.location.address,
+                      bookings: bookings,
+                      amount: amount,
+                    }));
+                    setShowCalendarModal(false);
+                    router.push("/booking/payment");
+                  }}
+                />
+              </div>
+            </motion.div>
           </div>
-        </div>
-      )}
+        )}
+      </AnimatePresence>
 
 
       {/* 🧾 Admin Edit Modal */}
@@ -410,7 +434,7 @@ export default function UserGroundDetails() {
                 </div>
                 <button
                   onClick={() => setShowEditModal(false)}
-                  className="w-12 h-12 flex items-center justify-center bg-slate-50 hover:bg-slate-100 text-slate-400 rounded-2xl transition-all"
+                  className="w-12 h-12 flex items-center justify-center bg-slate-50 text-slate-400 rounded-2xl transition-all"
                 >
                   <XMarkIcon className="w-6 h-6" />
                 </button>

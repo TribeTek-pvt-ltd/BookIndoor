@@ -69,7 +69,7 @@ export default function GroundsCarousel() {
             }}
           >
             {[...groundImages, ...groundImages].map((src, i) => (
-              <div key={i} className="relative flex-shrink-0 w-[350px] h-[220px] rounded-[2rem] overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-500 hover:-translate-y-2">
+              <div key={i} className="relative flex-shrink-0 w-[350px] h-[220px] rounded-[2rem] overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-500">
                 <Image
                   src={src}
                   alt={`Arena ${i + 1}`}

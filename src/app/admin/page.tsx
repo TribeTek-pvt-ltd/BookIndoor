@@ -181,15 +181,22 @@ export default function AdminPage() {
   };
 
   return (
-    <div className="justify-center bg-gray-50 min-h-screen">
-      <div className="w-full px-4 sm:px-6 py-10 bg-white shadow-sm rounded-xl">
-
-        {/* Header */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-4">
+    <div className="min-h-screen bg-slate-50/50 pb-20">
+      {/* Premium Header Banner */}
+      <div className="bg-slate-900 text-white pt-24 pb-32 px-4 sm:px-8 relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-emerald-500/10 rounded-full blur-[120px] -translate-y-1/2 translate-x-1/3 pointer-events-none"></div>
+        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-blue-500/10 rounded-full blur-[100px] translate-y-1/2 -translate-x-1/4 pointer-events-none"></div>
+        
+        <div className="max-w-7xl mx-auto relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
           <div>
-            <h1 className="text-3xl font-bold text-gray-800">Admin Dashboard</h1>
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-500/20">
+                <span className="text-white text-xl font-black font-outfit tracking-tighter">A</span>
+              </div>
+              <h1 className="text-3xl sm:text-4xl font-black tracking-tight font-outfit">Admin Command</h1>
+            </div>
             {role === "admin" && (
-              <p className="text-gray-500 mt-1">Manage your facility operations</p>
+              <p className="text-slate-400 font-medium text-sm sm:text-base ml-13">Manage your facility operations and monitor bookings</p>
             )}
           </div>
 
@@ -199,11 +206,11 @@ export default function AdminPage() {
               <select
                 value={selectedGroundId}
                 onChange={(e) => setSelectedGroundId(e.target.value)}
-                className="px-4 py-2 border border-gray-200 rounded-lg bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition"
+                className="px-5 py-3 rounded-2xl bg-white/10 border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 backdrop-blur-md transition-all appearance-none font-bold text-sm"
               >
-                <option value="">All Grounds</option>
+                <option value="" className="text-slate-900">All Grounds</option>
                 {grounds.map((g) => (
-                  <option key={g._id} value={g._id}>
+                  <option key={g._id} value={g._id} className="text-slate-900">
                     {g.name}
                   </option>
                 ))}
@@ -211,23 +218,25 @@ export default function AdminPage() {
             )}
 
             <div className="flex gap-3">
-              {/* ✅ Show Add button only for Admin */}
+              {/* Show Add button only for Admin */}
               {role === "admin" && activeTab === "grounds" && (
                 <button
                   onClick={() => setShowAddForm(true)}
-                  className="px-5 py-2 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition-all shadow-md w-full sm:w-auto"
+                  className="px-6 py-3 bg-emerald-500 text-white text-sm font-black uppercase tracking-widest rounded-2xl hover:bg-emerald-400 transition-all shadow-lg shadow-emerald-500/30 w-full sm:w-auto flex items-center justify-center gap-2"
                 >
-                  + Add New Ground
+                  <span className="text-lg">+</span> Add Arena
                 </button>
               )}
-
-
             </div>
           </div>
         </div>
+      </div>
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-8 -mt-20 relative z-20">
+        <div className="bg-white rounded-[2.5rem] shadow-xl shadow-slate-200/50 border border-slate-100 p-6 sm:p-10 min-h-[600px]">
 
         {/* Tabs */}
-        <div className="flex gap-4 mb-8 border-b border-gray-200 pb-2 overflow-x-auto">
+        <div className="flex gap-2 sm:gap-4 mb-10 overflow-x-auto custom-scrollbar bg-slate-50 p-2 rounded-2xl border border-slate-100 max-w-fit">
           {[
             { key: "grounds", label: "Grounds" },
             { key: "bookings", label: "Bookings" },
@@ -237,10 +246,11 @@ export default function AdminPage() {
             <button
               key={tab.key}
               onClick={() => setActiveTab(tab.key as TabType)}
-              className={`px-4 py-2 rounded-t-lg font-medium transition whitespace-nowrap ${activeTab === tab.key
-                ? "text-emerald-600 border-b-2 border-emerald-600"
-                : "text-gray-500 hover:text-emerald-500"
-                }`}
+              className={`px-5 py-2.5 rounded-xl text-xs sm:text-sm font-black uppercase tracking-widest transition-all whitespace-nowrap ${
+                activeTab === tab.key
+                  ? "bg-white text-emerald-600 shadow-md shadow-slate-200/50"
+                  : "text-slate-400 hover:text-slate-600 hover:bg-slate-100"
+              }`}
             >
               {tab.label}
             </button>
@@ -278,49 +288,28 @@ export default function AdminPage() {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
                   {grounds.map((ground) => (
-                    <div
-                      key={ground._id}
+                    <GroundCard
+                      key={ground.id}
+                      ground={ground}
+                      role="admin"
                       onClick={() => setSelectedGroundId(ground._id)}
-                      className="group cursor-pointer bg-white rounded-3xl border-2 border-slate-100 hover:border-emerald-500 p-6 transition-all duration-300 shadow-sm hover:shadow-xl hover:-translate-y-1"
-                    >
-                      <div className="aspect-[16/10] rounded-2xl overflow-hidden mb-5 bg-slate-100">
-                        <img
-                          src={ground.image}
-                          alt={ground.name}
-                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                        />
-                      </div>
-                      <h3 className="text-xl font-bold text-slate-800 group-hover:text-emerald-600 transition-colors">{ground.name}</h3>
-                      <p className="text-slate-400 text-sm mt-1 flex items-center gap-1.5">
-                        <span className="w-1.5 h-1.5 rounded-full bg-slate-300"></span>
-                        {ground.location}
-                      </p>
-
-                      <div className="mt-6 flex items-center justify-between">
-                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 bg-slate-50 px-2.5 py-1 rounded-lg">
-                          Manage slots
-                        </span>
-                        <div className="w-8 h-8 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-600 opacity-0 group-hover:opacity-100 transition-all transform translate-x-2 group-hover:translate-x-0">
-                          →
-                        </div>
-                      </div>
-                    </div>
+                    />
                   ))}
                 </div>
               </div>
             ) : (
               <div className="space-y-10 animate-fadeIn">
-                <div className="flex flex-col sm:flex-row items-center justify-between gap-6 bg-slate-900 p-8 rounded-[2rem] text-white shadow-xl">
-                  <div className="flex items-center gap-5">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 bg-slate-900 p-6 sm:p-8 rounded-[2rem] text-white shadow-xl">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-5">
                     <button
                       onClick={() => setSelectedGroundId("")}
-                      className="w-12 h-12 flex items-center justify-center bg-white/10 hover:bg-white/20 rounded-2xl transition-all border border-white/10 group"
+                      className="w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center bg-white/10 hover:bg-white/20 rounded-2xl transition-all border border-white/10 group shrink-0"
                     >
                       <span className="text-xl group-hover:-translate-x-1 transition-transform">←</span>
                     </button>
                     <div>
-                      <h2 className="text-2xl font-black tracking-tight">{grounds.find(g => g._id === selectedGroundId)?.name}</h2>
-                      <p className="text-emerald-400 text-xs font-bold uppercase tracking-widest mt-1">Operational Dashboard</p>
+                      <h2 className="text-xl sm:text-2xl font-black tracking-tight">{grounds.find(g => g._id === selectedGroundId)?.name}</h2>
+                      <p className="text-emerald-400 text-[10px] sm:text-xs font-bold uppercase tracking-widest mt-1">Operational Dashboard</p>
                     </div>
                   </div>
                   <div className="flex gap-3">
@@ -368,6 +357,7 @@ export default function AdminPage() {
             <DataViewerTab />
           )}
         </div>
+      </div>
       </div>
 
       {/* Add Ground Modal */}

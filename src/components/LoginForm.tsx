@@ -68,50 +68,58 @@ export default function LoginForm({ onSuccess }: LoginFormProps) {
     return (
         <div className="w-full">
             <div className="text-center mb-8">
-                <h2 className="text-3xl font-black text-slate-800 tracking-tight">Admin Access</h2>
-                <p className="text-slate-500 text-sm font-medium mt-1">Please sign in to manage your facility</p>
+                <h2 className="text-3xl font-black font-outfit text-slate-800 tracking-tight">Admin Access</h2>
+                <p className="text-slate-500 text-sm font-medium mt-2">Please sign in to manage your facility</p>
             </div>
 
-            <form onSubmit={handleLogin} className="space-y-5">
-                <div className="space-y-2">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Email Address</label>
-                    <div className="relative group">
-                        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-emerald-500 transition-colors">
-                            <EnvelopeIcon className="w-5 h-5" />
-                        </div>
-                        <input
-                            type="email"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            required
-                            className="w-full pl-12 pr-4 py-4 bg-slate-50 border-none rounded-2xl text-slate-900 placeholder:text-slate-300 focus:ring-4 focus:ring-emerald-500/10 transition-all font-medium"
-                            placeholder="Enter your email"
-                        />
+            <form onSubmit={handleLogin} className="space-y-6">
+                <div className="relative group">
+                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-emerald-500 transition-colors z-10">
+                        <EnvelopeIcon className="w-5 h-5" />
                     </div>
+                    <input
+                        type="email"
+                        id="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        required
+                        className="input peer pl-12 pt-6 pb-2"
+                        placeholder=" "
+                    />
+                    <label 
+                        htmlFor="email"
+                        className="absolute text-sm text-slate-500 duration-300 transform -translate-y-3 scale-75 top-4 z-10 origin-[0] left-12 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-3 peer-focus:text-emerald-600 font-medium"
+                    >
+                        Email Address
+                    </label>
                 </div>
 
-                <div className="space-y-2">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Password</label>
-                    <div className="relative group">
-                        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-emerald-500 transition-colors">
-                            <LockClosedIcon className="w-5 h-5" />
-                        </div>
-                        <input
-                            type="password"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            required
-                            className="w-full pl-12 pr-4 py-4 bg-slate-50 border-none rounded-2xl text-slate-900 placeholder:text-slate-300 focus:ring-4 focus:ring-emerald-500/10 transition-all font-medium"
-                            placeholder="Enter your password"
-                        />
+                <div className="relative group">
+                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-emerald-500 transition-colors z-10">
+                        <LockClosedIcon className="w-5 h-5" />
                     </div>
+                    <input
+                        type="password"
+                        id="password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        required
+                        className="input peer pl-12 pt-6 pb-2"
+                        placeholder=" "
+                    />
+                    <label 
+                        htmlFor="password"
+                        className="absolute text-sm text-slate-500 duration-300 transform -translate-y-3 scale-75 top-4 z-10 origin-[0] left-12 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-3 peer-focus:text-emerald-600 font-medium"
+                    >
+                        Password
+                    </label>
                 </div>
 
                 {error && (
                     <motion.p
                         initial={{ opacity: 0, y: -10 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="text-red-500 text-xs font-bold text-center bg-red-50 py-2 rounded-lg border border-red-100"
+                        className="text-red-500 text-xs font-bold text-center bg-red-50 py-3 rounded-xl border border-red-100"
                     >
                         {error}
                     </motion.p>
@@ -120,7 +128,7 @@ export default function LoginForm({ onSuccess }: LoginFormProps) {
                 <button
                     type="submit"
                     disabled={loading}
-                    className="w-full py-4 bg-emerald-600 text-white rounded-2xl font-black text-lg hover:bg-emerald-700 transition-all shadow-xl shadow-emerald-100 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed mt-4"
+                    className="w-full btn-premium py-4 mt-2"
                 >
                     {loading ? "Authenticating..." : "Sign In"}
                 </button>

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { motion } from "framer-motion";
-import { MapPinIcon, ArrowRightIcon } from "@heroicons/react/24/outline";
+import { MapPinIcon, ArrowRightIcon, CheckCircleIcon } from "@heroicons/react/24/outline";
 
 export interface Ground {
   _id: string;
@@ -18,71 +18,82 @@ interface GroundCardProps {
   id?: number;
   ground: Ground;
   role?: "admin" | "user" | "super_admin";
+  onClick?: () => void;
 }
 
-export default function GroundCard({ ground }: GroundCardProps) {
+export default function GroundCard({ ground, role = "user", onClick }: GroundCardProps) {
   const link = `/user/ground/${ground._id}`;
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: 30 }}
       whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
-      transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-      className="glass-card overflow-hidden w-full max-w-[400px] flex flex-col group h-full"
+      viewport={{ once: true, margin: "-50px" }}
+      transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+      className="glass-card overflow-hidden w-full max-w-[400px] flex flex-col group h-full relative"
     >
       {/* Image Container */}
-      <div className="relative w-full h-40 sm:h-60 overflow-hidden">
+      <div className="relative w-full h-48 sm:h-56 overflow-hidden">
         <Image
           src={ground.image}
           alt={ground.name}
           fill
-          className="object-cover transition-transform duration-700"
+          className="object-cover transition-opacity duration-700"
           sizes="(max-width: 768px) 100vw, 400px"
           priority
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-transparent to-transparent opacity-60 transition-opacity" />
-
-      </div>
-
-      {/* Content Area */}
-      <div className="p-3 sm:p-6 flex-1 flex flex-col space-y-2 sm:space-y-4">
-        <div>
-          <h3 className="text-base sm:text-xl font-bold text-slate-900 font-outfit mb-0.5 sm:mb-1 transition-colors truncate">
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-900/40 to-transparent opacity-80" />
+        
+        {/* Floating Verified Badge (Example) */}
+        <div className="absolute top-4 right-4 bg-white/20 backdrop-blur-md rounded-full px-3 py-1 flex items-center gap-1.5 border border-white/30 shadow-lg">
+          <CheckCircleIcon className="w-3.5 h-3.5 text-emerald-400" />
+          <span className="text-[10px] font-bold text-white uppercase tracking-wider">Verified</span>
+        </div>
+        
+        {/* Name overlaid on image for premium look */}
+        <div className="absolute bottom-4 left-4 right-4">
+          <h3 className="text-xl sm:text-2xl font-black text-white font-outfit mb-1 drop-shadow-md truncate">
             {ground.name}
           </h3>
-          <p className="text-slate-400 text-[10px] sm:text-sm flex items-center gap-1 sm:gap-1.5 font-medium truncate">
-            <MapPinIcon className="w-3 h-3 sm:w-4 sm:h-4 text-emerald-600 flex-shrink-0" />
+          <p className="text-emerald-100/90 text-xs sm:text-sm flex items-center gap-1.5 font-medium truncate drop-shadow-md">
+            <MapPinIcon className="w-4 h-4 text-emerald-400 flex-shrink-0" />
             {ground.location}
           </p>
         </div>
+      </div>
 
-        {/* Available Sports Section - New Location */}
+      {/* Content Area */}
+      <div className="p-5 flex-1 flex flex-col space-y-5 bg-white relative z-10">
+        
+        {/* Available Sports */}
         {ground.sports && ground.sports.length > 0 && (
-          <div className="flex flex-wrap gap-1 sm:gap-2">
-            {ground.sports.slice(0, 2).map((sport) => (
-              <span
-                key={sport}
-                className="text-[8px] sm:text-[10px] uppercase tracking-wider font-bold bg-emerald-100 text-emerald-800 px-1.5 sm:px-2.5 py-0.5 sm:py-1 rounded-full whitespace-nowrap"
-              >
-                {sport}
-              </span>
-            ))}
-            {ground.sports.length > 2 && (
-              <span className="text-[8px] sm:text-[10px] text-slate-400 font-bold self-center">
-                +{ground.sports.length - 2}
-              </span>
-            )}
+          <div className="space-y-2">
+            <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Sports Available</h4>
+            <div className="flex flex-wrap gap-2">
+              {ground.sports.slice(0, 3).map((sport) => (
+                <span
+                  key={sport}
+                  className="text-[10px] sm:text-xs uppercase tracking-wider font-bold bg-slate-100 text-slate-600 px-2.5 py-1 rounded-md border border-slate-200"
+                >
+                  {sport}
+                </span>
+              ))}
+              {ground.sports.length > 3 && (
+                <span className="text-[10px] sm:text-xs text-emerald-600 font-bold self-center px-1">
+                  +{ground.sports.length - 3} more
+                </span>
+              )}
+            </div>
           </div>
         )}
 
-        {/* Facilities (Limited) */}
+        {/* Facilities Preview */}
         {ground.facilities && ground.facilities.length > 0 && (
-          <div className="hidden sm:flex flex-wrap gap-2">
+          <div className="hidden sm:flex flex-wrap gap-2 pt-2 border-t border-slate-100">
             {ground.facilities.slice(0, 3).map((facility) => (
               <span
                 key={facility}
-                className="text-[11px] font-semibold bg-slate-50 text-slate-600 px-2.5 py-1 rounded-lg border border-slate-100 flex items-center gap-1.5"
+                className="text-[11px] font-semibold bg-emerald-50 text-emerald-700 px-2.5 py-1 rounded-full border border-emerald-100/50 flex items-center gap-1.5"
               >
                 {facility === "Wi-Fi" && <span className="text-[10px]">📶</span>}
                 {facility === "Parking" && <span className="text-[10px]">🅿️</span>}
@@ -93,16 +104,28 @@ export default function GroundCard({ ground }: GroundCardProps) {
           </div>
         )}
 
-        <div className="pt-2 sm:pt-4 mt-auto">
-          <Link
-            href={link}
-            className="w-full h-8 sm:h-12 btn-premium flex items-center justify-center gap-1 sm:gap-2 group/btn !px-2 sm:!px-4"
-          >
-            <span className="!text-white text-[10px] sm:text-sm font-black uppercase tracking-widest">
-              View
-            </span>
-            <ArrowRightIcon className="w-3 h-3 sm:w-4 sm:h-4 !text-white group-hover/btn:translate-x-1 transition-transform" />
-          </Link>
+        <div className="pt-2 mt-auto">
+          {onClick ? (
+            <button
+              onClick={onClick}
+              className="w-full h-12 btn-premium flex items-center justify-center gap-2 group/btn"
+            >
+              <span className="!text-white text-sm font-black uppercase tracking-widest">
+                {role === "admin" ? "Manage Ground" : "Select Arena"}
+              </span>
+              <ArrowRightIcon className="w-4 h-4 !text-white" />
+            </button>
+          ) : (
+            <Link
+              href={link}
+              className="w-full h-12 btn-premium flex items-center justify-center gap-2 group/btn"
+            >
+              <span className="!text-white text-sm font-black uppercase tracking-widest">
+                Book Arena
+              </span>
+              <ArrowRightIcon className="w-4 h-4 !text-white" />
+            </Link>
+          )}
         </div>
       </div>
     </motion.div>

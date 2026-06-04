@@ -3,217 +3,153 @@ import mongoose from "mongoose";
 import dbConnect from "@/lib/mongodb";
 import User from "@/models/User";
 import Ground from "@/models/Grounds";
-import Booking, { IBooking } from "@/models/Booking";
+import Booking from "@/models/Booking";
 import { verifyToken } from "@/lib/auth";
-
-interface DecodedToken {
-  id: string;
-  role: "super_admin" | "admin";
-}
-
-interface GroundStat {
-  groundId: string;
-  groundName: string;
-  totalBookings: number;
-  totalRevenue: number;
-}
-
-interface PeriodStats {
-  income: number;
-  totalBookings: number;
-  sports: Record<string, number>;
-}
-
-interface GroundBreakdown {
-  groundId: mongoose.Types.ObjectId;
-  groundName: string;
-  totalRevenue: number;
-  totalBookings: number;
-  summary: {
-    weekly: PeriodStats;
-    monthly: PeriodStats;
-    yearly: PeriodStats;
-  };
-}
 
 export async function GET(req: Request) {
   try {
     await dbConnect();
 
-    const authHeader = req.headers.get("authorization");
-    if (!authHeader) {
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader?.startsWith("Bearer ")) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const token = authHeader.split(" ")[1];
-    const decoded = verifyToken(token) as DecodedToken | null;
-    if (!decoded) {
-      return NextResponse.json({ error: "Invalid token" }, { status: 401 });
+    const decoded = verifyToken(authHeader.split(" ")[1]);
+    if (!decoded || !["super_admin", "admin"].includes(decoded.role)) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
-
-    const userRole = decoded.role;
-    const userId = decoded.id;
 
     const now = new Date();
-    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
     const startOfWeek = new Date(now);
     startOfWeek.setDate(now.getDate() - now.getDay());
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const startOfYear = new Date(now.getFullYear(), 0, 1);
 
-    // ---------- 📊 COMMON STATS ----------
-    let totalGrounds = 0;
-    let totalAdmins = 0;
-    let totalRevenue = 0;
-    let totalBookings = 0;
-    let monthlyBookings = 0;
-    let weeklyBookings = 0;
-    let groundWiseStats: GroundStat[] = [];
-
-    if (userRole === "super_admin") {
-      totalGrounds = await Ground.countDocuments();
-      totalAdmins = await User.countDocuments({ role: "admin" });
-      totalBookings = await Booking.countDocuments();
-
-      // total revenue
-      const revenueAgg = await Booking.aggregate<{ _id: null; total: number }>([
-        { $match: { paymentStatus: "fully_paid" } },
-        { $group: { _id: null, total: { $sum: "$totalAmount" } } },
+    if (decoded.role === "super_admin") {
+      const [totalGrounds, totalAdmins, statsAgg, periodStats] = await Promise.all([
+        Ground.countDocuments().lean(),
+        User.countDocuments({ role: "admin" }).lean(),
+        Booking.aggregate([
+          {
+            $facet: {
+              overall: [
+                { $group: { _id: null, totalBookings: { $sum: 1 }, totalRevenue: { $sum: { $cond: [{ $eq: ["$paymentStatus", "full_paid"] }, "$totalAmount", 0] } } } }
+              ],
+              groundWise: [
+                { $group: { _id: "$ground", totalBookings: { $sum: 1 }, totalRevenue: { $sum: { $cond: [{ $eq: ["$paymentStatus", "full_paid"] }, "$totalAmount", 0] } } } },
+                { $lookup: { from: "grounds", localField: "_id", foreignField: "_id", as: "groundInfo" } },
+                { $unwind: "$groundInfo" },
+                { $project: { _id: 0, groundId: "$groundInfo._id", groundName: "$groundInfo.name", totalBookings: 1, totalRevenue: 1 } }
+              ]
+            }
+          }
+        ]),
+        Booking.aggregate([
+          {
+            $facet: {
+              weekly: [{ $match: { createdAt: { $gte: startOfWeek } } }, { $count: "count" }],
+              monthly: [{ $match: { createdAt: { $gte: startOfMonth } } }, { $count: "count" }]
+            }
+          }
+        ])
       ]);
-      totalRevenue = revenueAgg[0]?.total || 0;
 
-      // monthly bookings
-      monthlyBookings = await Booking.countDocuments({
-        date: { $gte: startOfMonth },
+      const overall = statsAgg?.[0]?.overall?.[0] || { totalBookings: 0, totalRevenue: 0 };
+      
+      return NextResponse.json({
+        role: "super_admin",
+        totalGrounds,
+        totalAdmins,
+        totalRevenue: overall.totalRevenue,
+        totalBookings: overall.totalBookings,
+        monthlyBookings: periodStats?.[0]?.monthly?.[0]?.count || 0,
+        weeklyBookings: periodStats?.[0]?.weekly?.[0]?.count || 0,
+        groundWiseStats: statsAgg?.[0]?.groundWise || []
       });
-
-      // weekly bookings
-      weeklyBookings = await Booking.countDocuments({
-        date: { $gte: startOfWeek },
-      });
-
-      // ground wise stats
-      groundWiseStats = await Booking.aggregate<GroundStat>([
-        {
-          $group: {
-            _id: "$ground",
-            totalBookings: { $sum: 1 },
-            totalRevenue: {
-              $sum: {
-                $cond: [
-                  { $eq: ["$paymentStatus", "fully_paid"] },
-                  "$totalAmount",
-                  0,
-                ],
-              },
-            },
-          },
-        },
-        {
-          $lookup: {
-            from: "grounds",
-            localField: "_id",
-            foreignField: "_id",
-            as: "groundInfo",
-          },
-        },
-        { $unwind: "$groundInfo" },
-        {
-          $project: {
-            _id: 0,
-            groundId: "$groundInfo._id",
-            groundName: "$groundInfo.name",
-            totalBookings: 1,
-            totalRevenue: 1,
-          },
-        },
-      ]);
     }
 
+    // Admin Mode
     const url = new URL(req.url);
     const groundFilter = url.searchParams.get("ground");
+    const ownedGrounds = await Ground.find({ owner: decoded.id }).select("_id name").lean();
+    const ownedIds = ownedGrounds.map(g => g._id);
 
-    if (userRole === "admin") {
-      const ownedGrounds = await Ground.find({ owner: userId }).select("_id name");
-      const ownedGroundIds = ownedGrounds.map((g) => g._id.toString());
-      totalGrounds = ownedGrounds.length;
+    let matchQuery: any = { ground: { $in: ownedIds } };
+    if (groundFilter) {
+      if (!ownedIds.some(id => id.toString() === groundFilter)) {
+        return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      }
+      matchQuery.ground = new mongoose.Types.ObjectId(groundFilter);
+    }
 
-      let query: mongoose.FilterQuery<IBooking> = { ground: { $in: ownedGroundIds } };
-      if (groundFilter) {
-        if (!ownedGroundIds.includes(groundFilter)) {
-          return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    const [overallStats, groundBreakdown] = await Promise.all([
+      Booking.aggregate([
+        { $match: matchQuery },
+        {
+          $facet: {
+            summary: [
+              { $group: { 
+                _id: null, 
+                totalBookings: { $sum: 1 }, 
+                totalRevenue: { $sum: { $cond: [{ $eq: ["$paymentStatus", "full_paid"] }, "$totalAmount", 0] } } 
+              }}
+            ],
+            periods: [
+              {
+                $group: {
+                  _id: null,
+                  weekly: { $sum: { $cond: [{ $gte: ["$createdAt", startOfWeek] }, 1, 0] } },
+                  weeklyIncome: { $sum: { $cond: [{ $and: [{ $gte: ["$createdAt", startOfWeek] }, { $eq: ["$paymentStatus", "full_paid"] }] }, "$totalAmount", 0] } },
+                  monthly: { $sum: { $cond: [{ $gte: ["$createdAt", startOfMonth] }, 1, 0] } },
+                  monthlyIncome: { $sum: { $cond: [{ $and: [{ $gte: ["$createdAt", startOfMonth] }, { $eq: ["$paymentStatus", "full_paid"] }] }, "$totalAmount", 0] } },
+                  yearly: { $sum: { $cond: [{ $gte: ["$createdAt", startOfYear] }, 1, 0] } },
+                  yearlyIncome: { $sum: { $cond: [{ $and: [{ $gte: ["$createdAt", startOfYear] }, { $eq: ["$paymentStatus", "full_paid"] }] }, "$totalAmount", 0] } }
+                }
+              }
+            ],
+            sports: [
+              { $group: { _id: "$sportName", count: { $sum: 1 } } }
+            ]
+          }
         }
-        query = { ground: groundFilter };
-      }
+      ]),
+      Booking.aggregate([
+        { $match: matchQuery },
+        { $group: { 
+          _id: "$ground", 
+          totalBookings: { $sum: 1 }, 
+          totalRevenue: { $sum: { $cond: [{ $eq: ["$paymentStatus", "full_paid"] }, "$totalAmount", 0] } } 
+        }},
+        { $lookup: { from: "grounds", localField: "_id", foreignField: "_id", as: "info" } },
+        { $unwind: "$info" },
+        { $project: { _id: 0, groundId: "$_id", groundName: "$info.name", totalBookings: 1, totalRevenue: 1 } }
+      ])
+    ]);
 
-      const getStatsForBookings = (bookings: IBooking[]) => {
-        const getStatsForPeriod = (startDate: Date) => {
-          const filtered = bookings.filter((b) => new Date(b.createdAt) >= startDate);
-          const income = filtered
-            .filter((b) => b.paymentStatus === "full_paid")
-            .reduce((sum, b) => sum + b.totalAmount, 0);
-
-          const sports: Record<string, number> = {};
-          filtered.forEach(b => {
-            sports[b.sportName] = (sports[b.sportName] || 0) + 1;
-          });
-
-          return { income, totalBookings: filtered.length, sports };
-        };
-
-        const startOfYear = new Date(now.getFullYear(), 0, 1);
-
-        return {
-          weekly: getStatsForPeriod(startOfWeek),
-          monthly: getStatsForPeriod(startOfMonth),
-          yearly: getStatsForPeriod(startOfYear),
-        };
-      };
-
-      const adminBookings = await Booking.find(query);
-      totalBookings = adminBookings.length;
-
-      let perGroundBreakdown: GroundBreakdown[] = [];
-      if (!groundFilter) {
-        perGroundBreakdown = ownedGrounds.map(g => {
-          const groundBookings = adminBookings.filter(b => b.ground.toString() === g._id.toString());
-          return {
-            groundId: g._id,
-            groundName: g.name,
-            totalRevenue: groundBookings
-              .filter(b => b.paymentStatus === "full_paid")
-              .reduce((sum, b) => sum + b.totalAmount, 0),
-            totalBookings: groundBookings.length,
-            summary: getStatsForBookings(groundBookings)
-          };
-        });
-      }
-
-      return NextResponse.json({
-        role: userRole,
-        totalGrounds,
-        totalRevenue: adminBookings
-          .filter(b => b.paymentStatus === "full_paid")
-          .reduce((sum, b) => sum + b.totalAmount, 0),
-        totalBookings,
-        summary: getStatsForBookings(adminBookings),
-        groundWiseStats: perGroundBreakdown
-      });
+    const summary = overallStats?.[0]?.summary?.[0] || { totalBookings: 0, totalRevenue: 0 };
+    const periods = overallStats?.[0]?.periods?.[0] || { weekly: 0, weeklyIncome: 0, monthly: 0, monthlyIncome: 0, yearly: 0, yearlyIncome: 0 };
+    const sportsMap: Record<string, number> = {};
+    if (overallStats?.[0]?.sports) {
+      overallStats[0].sports.forEach((s: any) => sportsMap[s._id] = s.count);
     }
 
     return NextResponse.json({
-      role: userRole,
-      totalGrounds,
-      totalAdmins,
-      totalRevenue,
-      totalBookings,
-      monthlyBookings,
-      weeklyBookings,
-      groundWiseStats,
+      role: "admin",
+      totalGrounds: ownedGrounds.length,
+      totalRevenue: summary.totalRevenue,
+      totalBookings: summary.totalBookings,
+      summary: {
+        weekly: { income: periods.weeklyIncome, totalBookings: periods.weekly, sports: sportsMap },
+        monthly: { income: periods.monthlyIncome, totalBookings: periods.monthly, sports: sportsMap },
+        yearly: { income: periods.yearlyIncome, totalBookings: periods.yearly, sports: sportsMap }
+      },
+      groundWiseStats: groundBreakdown || []
     });
-  } catch (err: unknown) {
+
+  } catch (err) {
     console.error("Stats Error:", err);
-    return NextResponse.json(
-      { error: "Failed to fetch stats" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Failed to fetch stats" }, { status: 500 });
   }
 }
+

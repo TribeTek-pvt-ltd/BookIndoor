@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@heroicons/react": "^2.2.0",
+    "@supabase/supabase-js": "^2.105.4",
     "bcryptjs": "^3.0.2",
     "cloudinary": "^2.7.0",
     "framer-motion": "^12.23.22",
@@ -22,7 +23,8 @@
     "react-countup": "^6.5.3",
     "react-dom": "19.1.0",
     "react-icons": "^5.5.0",
-    "react-intersection-observer": "^9.16.0"
+    "react-intersection-observer": "^9.16.0",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",

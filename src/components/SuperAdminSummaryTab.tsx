@@ -110,10 +110,10 @@ export default function SuperAdminSummaryTab() {
       {summaryCards.map((card, idx) => (
         <div
           key={idx}
-          className="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group cursor-default"
+          className="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-xl transition-all duration-300 group cursor-default"
         >
           <div className="flex justify-between items-start mb-6">
-            <div className="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center text-xl group-hover:bg-emerald-50 group-hover:scale-110 transition-all duration-500">
+            <div className="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center text-xl group-hover:bg-emerald-50 transition-all duration-500">
               {card.icon}
             </div>
             <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest bg-slate-50 px-2 py-0.5 rounded-md">Live Data</span>
