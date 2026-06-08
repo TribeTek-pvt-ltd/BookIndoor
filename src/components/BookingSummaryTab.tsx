@@ -18,6 +18,7 @@ interface GroundStat {
   groundId: string;
   groundName: string;
   totalRevenue: number;
+  totalBookings: number;
   summary: Record<string, SummaryStats>;
 }
 

@@ -80,10 +80,11 @@ export async function POST(req: Request) {
     });
 
     return NextResponse.json({ success: true, ground }, { status: 201 });
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("Ground Creation Error:", err);
+    const errorMessage = err instanceof Error ? err.message : "Failed to create ground";
     return NextResponse.json(
-      { error: err.message || "Failed to create ground" },
+      { error: errorMessage },
       { status: 500 }
     );
   }
@@ -98,8 +99,7 @@ export async function GET(req: Request) {
     const token = authHeader?.split(" ")[1];
     const decoded = token ? verifyToken(token) : null;
 
-    let query = {};
-    let projection = {};
+
 
     if (decoded?.role === "super_admin") {
       // Super admin sees everything
@@ -124,11 +124,12 @@ export async function GET(req: Request) {
       sports: 1,
       images: 1,
       availableTime: 1,
-      groundType: 1
+      groundType: 1,
+      amenities: 1
     }).lean();
 
     return NextResponse.json(grounds);
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("Ground Fetch Error:", err);
     return NextResponse.json(
       { error: "Failed to fetch grounds" },

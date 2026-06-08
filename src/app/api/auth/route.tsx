@@ -69,9 +69,10 @@ export async function POST(req: Request) {
       { error: "Invalid registration flow" },
       { status: 400 }
     );
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("Registration Error:", err);
-    return NextResponse.json({ error: err.message || "Server error" }, { status: 500 });
+    const errorMessage = err instanceof Error ? err.message : "Server error";
+    return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 }
 
@@ -97,7 +98,7 @@ export async function GET(req: Request) {
       .lean();
 
     return NextResponse.json({ admins });
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("Fetch Admins Error:", err);
     return NextResponse.json(
       { error: "Failed to fetch admins" },

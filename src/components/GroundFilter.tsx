@@ -1,19 +1,10 @@
 "use client";
 import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import {
-  MagnifyingGlassIcon,
-  MapPinIcon,
-  TrophyIcon,
-  ChevronDownIcon,
-  AdjustmentsHorizontalIcon,
-  XMarkIcon
-} from "@heroicons/react/24/outline";
+import { MagnifyingGlassIcon, XMarkIcon } from "@heroicons/react/24/outline";
 
 interface GroundFilterProps {
   onFilterChange: (filters: {
-    name: string;
-    location: string;
+    search: string;
     sport: string;
   }) => void;
   availableSports: string[];
@@ -23,142 +14,92 @@ export default function GroundFilter({
   onFilterChange,
   availableSports,
 }: GroundFilterProps) {
-  const [isOpen, setIsOpen] = useState(false);
-  const [filters, setFilters] = useState({
-    name: "",
-    location: "",
-    sport: "",
-  });
+  const [search, setSearch] = useState("");
+  const [sport, setSport] = useState("");
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-  ) => {
-    const { name, value } = e.target;
-    const newFilters = { ...filters, [name]: value };
-    setFilters(newFilters);
-    onFilterChange(newFilters);
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    setSearch(val);
+    onFilterChange({ search: val, sport });
+  };
+
+  const handleSportSelect = (selectedSport: string) => {
+    const newSport = sport === selectedSport ? "" : selectedSport;
+    setSport(newSport);
+    onFilterChange({ search, sport: newSport });
   };
 
   const handleClear = () => {
-    const cleared = { name: "", location: "", sport: "" };
-    setFilters(cleared);
-    onFilterChange(cleared);
+    setSearch("");
+    setSport("");
+    onFilterChange({ search: "", sport: "" });
   };
 
-  const hasFilters = filters.name || filters.location || filters.sport;
+  const hasFilters = search || sport;
 
   return (
-    <div className="w-full max-w-5xl mx-auto mb-12">
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-6">
-        <button
-          onClick={() => setIsOpen(!isOpen)}
-          className={`group flex items-center gap-3 px-6 py-3 rounded-2xl font-bold transition-all duration-300 shadow-sm border ${isOpen
-            ? "bg-emerald-600 text-white border-emerald-500 shadow-emerald-100"
-            : "bg-white text-slate-700 border-slate-100 "
-            }`}
-        >
-          <AdjustmentsHorizontalIcon className={`w-5 h-5 transition-transform duration-500 ${isOpen ? 'rotate-180' : ''}`} />
-          <span className="font-outfit">
-            {isOpen ? "Hide Filters" : "Show Filters"}
-          </span>
-          <ChevronDownIcon className={`w-4 h-4 transition-transform duration-500 ${isOpen ? 'rotate-180' : ''}`} />
-
-          {hasFilters && !isOpen && (
-            <span className="flex h-2 w-2 rounded-full bg-emerald-400 animate-pulse ml-1" />
-          )}
-        </button>
-
-        {hasFilters && (
+    <div className="w-full flex flex-col gap-6">
+      {/* Unified Search Bar */}
+      <div className="relative group w-full max-w-3xl mx-auto">
+        <div className="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none text-slate-400 group-focus-within:text-emerald-500 transition-colors">
+          <MagnifyingGlassIcon className="h-6 w-6" />
+        </div>
+        <input
+          type="text"
+          value={search}
+          onChange={handleSearchChange}
+          placeholder="Search by arena name or location..."
+          className="w-full pl-14 pr-12 py-5 bg-white border border-slate-200 rounded-[2rem] text-slate-900 placeholder:text-slate-400 focus:ring-4 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all font-medium text-lg shadow-[0_8px_30px_rgba(0,0,0,0.04)]"
+        />
+        {search && (
           <button
-            onClick={handleClear}
-            className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-slate-400 hover:text-emerald-600 transition-colors"
+            onClick={() => {
+              setSearch("");
+              onFilterChange({ search: "", sport });
+            }}
+            className="absolute inset-y-0 right-0 pr-5 flex items-center text-slate-400 hover:text-slate-600 transition-colors"
           >
-            <XMarkIcon className="w-4 h-4" />
-            Clear All Filters
+            <XMarkIcon className="h-5 w-5 bg-slate-100 rounded-full p-0.5" />
           </button>
         )}
       </div>
 
-      <AnimatePresence>
-        {isOpen && (
-          <motion.div
-            initial={{ opacity: 0, height: 0, y: -20 }}
-            animate={{ opacity: 1, height: "auto", y: 0 }}
-            exit={{ opacity: 0, height: 0, y: -20 }}
-            transition={{ duration: 0.4, ease: "circOut" }}
-            className="overflow-hidden"
+      {/* Horizontal Pill Sport Categories */}
+      <div className="flex items-center gap-3 overflow-x-auto pb-4 custom-scrollbar px-2 max-w-full">
+        <button
+          onClick={() => handleSportSelect("")}
+          className={`flex-shrink-0 px-6 py-2.5 rounded-full font-bold text-sm transition-all duration-300 border ${
+            !sport
+              ? "bg-slate-900 text-white border-slate-900 shadow-md"
+              : "bg-white text-slate-600 border-slate-200 hover:border-slate-300 hover:bg-slate-50"
+          }`}
+        >
+          All Sports
+        </button>
+        {availableSports.map((s, idx) => (
+          <button
+            key={idx}
+            onClick={() => handleSportSelect(s)}
+            className={`flex-shrink-0 px-6 py-2.5 rounded-full font-bold text-sm transition-all duration-300 border ${
+              sport === s
+                ? "bg-emerald-500 text-white border-emerald-500 shadow-md shadow-emerald-500/20"
+                : "bg-white text-slate-600 border-slate-200 hover:border-slate-300 hover:bg-slate-50"
+            }`}
           >
-            <div className="bg-white/80 backdrop-blur-md border border-slate-100 p-8 rounded-3xl shadow-2xl shadow-slate-200/50">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                {/* Ground Name */}
-                <div className="flex flex-col gap-2">
-                  <label className="text-xs font-bold text-slate-400 uppercase tracking-widest px-1">
-                    Arena Name
-                  </label>
-                  <div className="relative group">
-                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-emerald-500 transition-colors">
-                      <MagnifyingGlassIcon className="h-5 w-5" />
-                    </div>
-                    <input
-                      type="text"
-                      name="name"
-                      value={filters.name}
-                      onChange={handleChange}
-                      placeholder="Search by name..."
-                      className="w-full pl-12 pr-4 py-3.5 bg-slate-50 border-none rounded-2xl text-slate-900 placeholder:text-slate-300 focus:ring-4 focus:ring-emerald-500/10 transition-all font-medium"
-                    />
-                  </div>
-                </div>
+            {s}
+          </button>
+        ))}
 
-                {/* Location */}
-                <div className="flex flex-col gap-2">
-                  <label className="text-xs font-bold text-slate-400 uppercase tracking-widest px-1">
-                    Location
-                  </label>
-                  <div className="relative group">
-                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-emerald-500 transition-colors">
-                      <MapPinIcon className="h-5 w-5" />
-                    </div>
-                    <input
-                      type="text"
-                      name="location"
-                      value={filters.location}
-                      onChange={handleChange}
-                      placeholder="Search by area..."
-                      className="w-full pl-12 pr-4 py-3.5 bg-slate-50 border-none rounded-2xl text-slate-900 placeholder:text-slate-300 focus:ring-4 focus:ring-emerald-500/10 transition-all font-medium"
-                    />
-                  </div>
-                </div>
-
-                {/* Sport */}
-                <div className="flex flex-col gap-2">
-                  <label className="text-xs font-bold text-slate-400 uppercase tracking-widest px-1">
-                    Sport Category
-                  </label>
-                  <div className="relative group">
-                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-emerald-500 transition-colors">
-                      <TrophyIcon className="h-5 w-5" />
-                    </div>
-                    <select
-                      name="sport"
-                      value={filters.sport}
-                      onChange={handleChange}
-                      className="w-full pl-12 pr-4 py-3.5 bg-slate-50 border-none rounded-2xl text-slate-900 appearance-none focus:ring-4 focus:ring-emerald-500/10 transition-all font-medium cursor-pointer"
-                    >
-                      <option value="">All Sports</option>
-                      {availableSports.map((sport, idx) => (
-                        <option key={idx} value={sport}>
-                          {sport}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </motion.div>
+        {hasFilters && (
+           <button
+             onClick={handleClear}
+             className="flex-shrink-0 flex items-center gap-1.5 ml-auto pl-4 text-sm font-bold text-slate-400 hover:text-emerald-600 transition-colors"
+           >
+             <XMarkIcon className="w-4 h-4" />
+             Clear Filters
+           </button>
         )}
-      </AnimatePresence>
+      </div>
     </div>
   );
 }

@@ -43,7 +43,7 @@ export default function BookingDetailsTab({ selectedSport, groundId }: BookingDe
   const fetchBookings = useCallback(async () => {
     try {
       setLoading(true);
-      const data: APIBooking[] = await api.get("/api/booking", { params: { ground: groundId } });
+      const data: APIBooking[] = await api.get("/api/booking", { params: { ground: groundId || "" } });
       const mapped: Booking[] = data.map((b) => ({
         id: b._id,
         name: b.guest?.name || "Member",

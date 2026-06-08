@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { motion } from "framer-motion";
-import { MapPinIcon, ArrowRightIcon, CheckCircleIcon } from "@heroicons/react/24/outline";
+import { MapPinIcon, ArrowRightIcon, CheckCircleIcon } from "@heroicons/react/24/solid";
 
 export interface Ground {
   _id: string;
@@ -25,37 +25,40 @@ export default function GroundCard({ ground, role = "user", onClick }: GroundCar
   const link = `/user/ground/${ground._id}`;
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 30 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-50px" }}
-      transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-      className="glass-card overflow-hidden w-full max-w-[400px] flex flex-col group h-full relative"
+    <div
+      className="bg-white rounded-[2rem] overflow-hidden w-full max-w-[420px] flex flex-col group h-full relative shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 transition-all duration-500 hover:-translate-y-2 hover:shadow-[0_20px_40px_-15px_rgba(16,185,129,0.3)] perspective-1000"
     >
-      {/* Image Container */}
-      <div className="relative w-full h-48 sm:h-56 overflow-hidden">
+      {/* Image Container with 3D Image Hover */}
+      <div className="relative w-full h-56 sm:h-64 overflow-hidden rounded-t-[2rem]">
         <Image
           src={ground.image}
           alt={ground.name}
           fill
-          className="object-cover transition-opacity duration-700"
-          sizes="(max-width: 768px) 100vw, 400px"
+          className="object-cover transition-transform duration-1000 group-hover:scale-110"
+          sizes="(max-width: 768px) 100vw, 420px"
           priority
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-900/40 to-transparent opacity-80" />
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/20 to-transparent opacity-60 group-hover:opacity-80 transition-opacity duration-500" />
         
-        {/* Floating Verified Badge (Example) */}
-        <div className="absolute top-4 right-4 bg-white/20 backdrop-blur-md rounded-full px-3 py-1 flex items-center gap-1.5 border border-white/30 shadow-lg">
+        {/* Floating Verified Badge */}
+        <div className="absolute top-4 right-4 bg-white/20 backdrop-blur-md rounded-full px-3 py-1 flex items-center gap-1.5 border border-white/30 shadow-lg z-10">
           <CheckCircleIcon className="w-3.5 h-3.5 text-emerald-400" />
-          <span className="text-[10px] font-bold text-white uppercase tracking-wider">Verified</span>
+          <span className="text-[10px] font-bold text-white uppercase tracking-wider drop-shadow-sm">Verified</span>
         </div>
-        
-        {/* Name overlaid on image for premium look */}
-        <div className="absolute bottom-4 left-4 right-4">
-          <h3 className="text-xl sm:text-2xl font-black text-white font-outfit mb-1 drop-shadow-md truncate">
-            {ground.name}
-          </h3>
-          <p className="text-emerald-100/90 text-xs sm:text-sm flex items-center gap-1.5 font-medium truncate drop-shadow-md">
+
+        {/* Glassmorphic Tags Panel floating inside image */}
+        <div className="absolute bottom-4 left-4 right-4 z-10">
+          <div className="flex flex-wrap gap-2 mb-2">
+             {ground.sports && ground.sports.slice(0, 3).map((sport) => (
+                <span
+                  key={sport}
+                  className="text-[10px] sm:text-xs uppercase tracking-wider font-black bg-white/20 backdrop-blur-md text-white px-3 py-1 rounded-full border border-white/20 shadow-sm"
+                >
+                  {sport}
+                </span>
+             ))}
+          </div>
+          <p className="text-emerald-100 text-xs sm:text-sm flex items-center gap-1.5 font-medium truncate drop-shadow-md">
             <MapPinIcon className="w-4 h-4 text-emerald-400 flex-shrink-0" />
             {ground.location}
           </p>
@@ -63,37 +66,19 @@ export default function GroundCard({ ground, role = "user", onClick }: GroundCar
       </div>
 
       {/* Content Area */}
-      <div className="p-5 flex-1 flex flex-col space-y-5 bg-white relative z-10">
+      <div className="p-6 flex-1 flex flex-col bg-white relative z-10">
         
-        {/* Available Sports */}
-        {ground.sports && ground.sports.length > 0 && (
-          <div className="space-y-2">
-            <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Sports Available</h4>
-            <div className="flex flex-wrap gap-2">
-              {ground.sports.slice(0, 3).map((sport) => (
-                <span
-                  key={sport}
-                  className="text-[10px] sm:text-xs uppercase tracking-wider font-bold bg-slate-100 text-slate-600 px-2.5 py-1 rounded-md border border-slate-200"
-                >
-                  {sport}
-                </span>
-              ))}
-              {ground.sports.length > 3 && (
-                <span className="text-[10px] sm:text-xs text-emerald-600 font-bold self-center px-1">
-                  +{ground.sports.length - 3} more
-                </span>
-              )}
-            </div>
-          </div>
-        )}
+        <h3 className="text-2xl font-black text-slate-900 font-outfit mb-4 truncate group-hover:text-emerald-600 transition-colors">
+          {ground.name}
+        </h3>
 
         {/* Facilities Preview */}
         {ground.facilities && ground.facilities.length > 0 && (
-          <div className="hidden sm:flex flex-wrap gap-2 pt-2 border-t border-slate-100">
-            {ground.facilities.slice(0, 3).map((facility) => (
+          <div className="flex flex-wrap gap-2 mb-6">
+            {ground.facilities.slice(0, 4).map((facility) => (
               <span
                 key={facility}
-                className="text-[11px] font-semibold bg-emerald-50 text-emerald-700 px-2.5 py-1 rounded-full border border-emerald-100/50 flex items-center gap-1.5"
+                className="text-[11px] font-semibold bg-slate-50 text-slate-600 px-3 py-1.5 rounded-xl border border-slate-100 flex items-center gap-1.5"
               >
                 {facility === "Wi-Fi" && <span className="text-[10px]">📶</span>}
                 {facility === "Parking" && <span className="text-[10px]">🅿️</span>}
@@ -104,30 +89,26 @@ export default function GroundCard({ ground, role = "user", onClick }: GroundCar
           </div>
         )}
 
-        <div className="pt-2 mt-auto">
+        <div className="mt-auto pt-4">
           {onClick ? (
             <button
               onClick={onClick}
-              className="w-full h-12 btn-premium flex items-center justify-center gap-2 group/btn"
+              className="w-full py-4 px-6 rounded-2xl font-black uppercase tracking-widest text-sm bg-slate-900 text-white flex items-center justify-center gap-3 group/btn hover:bg-slate-800 transition-all duration-300 active:scale-95 shadow-md"
             >
-              <span className="!text-white text-sm font-black uppercase tracking-widest">
-                {role === "admin" ? "Manage Ground" : "Select Arena"}
-              </span>
-              <ArrowRightIcon className="w-4 h-4 !text-white" />
+              <span>{role === "admin" ? "Manage Ground" : "Select Arena"}</span>
+              <ArrowRightIcon className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" />
             </button>
           ) : (
             <Link
               href={link}
-              className="w-full h-12 btn-premium flex items-center justify-center gap-2 group/btn"
+              className="w-full py-4 px-6 rounded-2xl font-black uppercase tracking-widest text-sm bg-emerald-500 text-white flex items-center justify-center gap-3 group/btn hover:bg-emerald-400 transition-all duration-300 active:scale-95 shadow-[0_10px_20px_-5px_rgba(16,185,129,0.4)] hover:shadow-[0_15px_25px_-5px_rgba(16,185,129,0.5)] border border-emerald-400/50"
             >
-              <span className="!text-white text-sm font-black uppercase tracking-widest">
-                Book Arena
-              </span>
-              <ArrowRightIcon className="w-4 h-4 !text-white" />
+              <span>Book Arena</span>
+              <ArrowRightIcon className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" />
             </Link>
           )}
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 }

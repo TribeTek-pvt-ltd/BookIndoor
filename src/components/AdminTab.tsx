@@ -7,17 +7,21 @@ import AdminDetailsModal from "./admin/AdminDetailsModal";
 import AdminFormModal from "./admin/AdminFormModal";
 
 export default function AdminTab() {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [admins, setAdmins] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedAdminId, setSelectedAdminId] = useState<string | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [adminDetails, setAdminDetails] = useState<any>(null);
   const [detailsLoading, setDetailsLoading] = useState(false);
   const [showForm, setShowForm] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [editingAdmin, setEditingAdmin] = useState<any | null>(null);
 
   const fetchAdmins = useCallback(async () => {
     try {
       setLoading(true);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const data: any = await api.get("/api/auth");
       setAdmins(data.admins || []);
     } catch (err) {
@@ -47,6 +51,7 @@ export default function AdminTab() {
     fetchDetails();
   }, [selectedAdminId]);
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleFormSubmit = async (data: any) => {
     try {
       if (editingAdmin) {
@@ -57,8 +62,9 @@ export default function AdminTab() {
       setShowForm(false);
       setEditingAdmin(null);
       fetchAdmins();
-    } catch (err: any) {
-      alert(err.message || "Operation failed");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Operation failed";
+      alert(message);
     }
   };
 

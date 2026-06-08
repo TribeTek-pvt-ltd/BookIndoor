@@ -58,6 +58,7 @@ export async function PUT(
                     const ownerInfo = groundInfo?.owner as unknown as IUser;
                     const guestInfo = populatedBooking.guest;
 
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     const bookingDetails = `${populatedBooking.date}: ${populatedBooking.timeSlots.map((ts: any) => ts.startTime).join(', ')}`;
 
                     // 1. Send to Guest

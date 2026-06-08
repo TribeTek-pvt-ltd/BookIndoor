@@ -76,6 +76,7 @@ export default function AddGroundForm({ ground, isEditing = false, onClose }: Ad
       const [parent, child] = name.split(".");
       setFormData(prev => ({
         ...prev,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         [parent]: { ...(prev as any)[parent], [child]: value }
       }));
     } else {
@@ -129,7 +130,7 @@ export default function AddGroundForm({ ground, isEditing = false, onClose }: Ad
       // Client-side validation
       const validation = GroundSchema.safeParse(formData);
       if (!validation.success) {
-        throw new Error("Please check all fields: " + validation.error.errors[0].message);
+        throw new Error("Please check all fields: " + validation.error.issues[0]?.message);
       }
 
       const body = new FormData();
@@ -147,14 +148,21 @@ export default function AddGroundForm({ ground, isEditing = false, onClose }: Ad
       images.forEach(file => body.append("images", file));
 
       const endpoint = isEditing ? `/api/grounds/${ground?._id}` : "/api/grounds";
-      const method = isEditing ? "PUT" : "POST";
-
-      await api.post(endpoint, body, { method }); // api.post helper can take method override or we can add api.put
+      if (isEditing) {
+        await api.put(endpoint, body);
+      } else {
+        await api.post(endpoint, body);
+      }
 
       alert("✅ Ground saved successfully!");
-      onClose ? onClose() : router.push("/admin");
-    } catch (err: any) {
-      alert("❌ " + err.message);
+      if (onClose) {
+        onClose();
+      } else {
+        router.push("/admin");
+      }
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "An error occurred";
+      alert("❌ " + message);
     } finally {
       setIsSubmitting(false);
     }

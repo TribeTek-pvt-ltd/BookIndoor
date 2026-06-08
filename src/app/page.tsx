@@ -8,7 +8,7 @@ import CTASection from "@/components/CTASection";
 
 export default function HomePage() {
   return (
-    <main className="w-full overflow-x-hidden bg-white selection:bg-emerald-200 selection:text-emerald-900">
+    <main className="w-full overflow-x-hidden bg-[#020617] selection:bg-emerald-200 selection:text-emerald-900">
       {/* Hero Section */}
       <HeroSection />
 

@@ -37,7 +37,7 @@ export async function POST(req: Request) {
     // Zod validation
     const validation = BatchBookingSchema.safeParse(body);
     if (!validation.success) {
-      return NextResponse.json({ error: validation.error?.errors?.[0]?.message || "Validation failed" }, { status: 400 });
+      return NextResponse.json({ error: validation.error?.issues?.[0]?.message || "Validation failed" }, { status: 400 });
     }
     const data = validation.data;
 
@@ -67,7 +67,8 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Some time slots are already booked" }, { status: 400 });
     }
 
-    const sport = ground.sports.find((s: any) => s.name === data.sportName);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const sport = (ground as any).sports?.find((s: any) => s.name === data.sportName);
     if (!sport) return NextResponse.json({ error: "Sport not found" }, { status: 404 });
 
     const pricePerSlot = sport.pricePerHour;
@@ -117,10 +118,11 @@ export async function GET(req: Request) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
       }
 
-      let query: any = {};
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const query: any = {};
       if (decoded.role === "admin") {
         const ownedGrounds = await Ground.find({ owner: decoded.id }).select("_id").lean();
-        const ownedIds = ownedGrounds.map(g => g._id.toString());
+        const ownedIds = ownedGrounds.map(g => String(g._id));
         if (groundId) {
           if (!ownedIds.includes(groundId)) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
           query.ground = groundId;
@@ -140,9 +142,11 @@ export async function GET(req: Request) {
     const ground = await Ground.findById(groundId).select("availableTime").lean();
     if (!ground) return NextResponse.json({ error: "Ground not found" }, { status: 404 });
 
-    const timeSlots = generateTimeSlots(ground.availableTime.from, ground.availableTime.to);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const timeSlots = generateTimeSlots((ground as any).availableTime.from, (ground as any).availableTime.to);
     const bookings = await Booking.find({ ground: groundId, date, status: { $ne: "cancelled" } }).select("timeSlots").lean();
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const bookedSet = new Set(bookings.flatMap(b => b.timeSlots.map((ts: any) => ts.startTime)));
 
     const response = timeSlots.map(slot => ({

@@ -39,6 +39,7 @@ export default function DataViewerTab() {
   const fetchData = useCallback(async () => {
     try {
       setLoading(true);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const result: any = await api.get("/api/admin-data");
       setData(result);
     } catch (err) {

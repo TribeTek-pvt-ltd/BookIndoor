@@ -102,6 +102,7 @@ export async function POST(req: Request) {
                         const ownerInfo = groundInfo?.owner as unknown as IUser;
                         const guestInfo = firstBooking.guest;
 
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
                         const bookingDetails = updatedBookings.map(b => `${b.date}: ${b.timeSlots.map(ts => (ts as any).startTime).join(', ')}`).join('\n');
 
                         // 1. Send to Guest

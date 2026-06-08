@@ -45,6 +45,7 @@ export default function Calendar({
   const fetchSlots = useCallback(async () => {
     if (!selectedDate) return;
     try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const data: any = await api.get(`/api/booking`, { params: { ground: groundId, date: selectedDate } });
       setSlots(Array.isArray(data) ? data : []);
     } catch (err) {

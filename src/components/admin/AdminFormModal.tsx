@@ -10,6 +10,7 @@ interface Admin extends UserInput {
 interface AdminFormModalProps {
   editingAdmin: Admin | null;
   onClose: () => void;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onSubmit: (data: any) => void;
 }
 

@@ -443,18 +443,14 @@ export default function UserGroundDetails() {
               <div className="flex-1 overflow-y-auto custom-scrollbar p-2">
                 <AddGroundForm
                   ground={{
-                    id: ground._id || "",
+                    _id: ground._id || "",
                     name: ground.name,
-                    location: ground.location.address,
-                    latitude: String(ground.location.lat),
-                    longitude: String(ground.location.lng),
-                    open_from: ground.availableTime.from,
-                    open_to: ground.availableTime.to,
-                    facilities: ground.amenities.join(", "),
-                    phone_no: "", // if not available, can leave empty or add default
-                    court_type: "Outdoor", // default value or fetch from API if exists
-                    sports: ground.sports.map((s) => s.name),
-                    priceList: ground.sports.map((s) => s.pricePerHour),
+                    location: ground.location,
+                    availableTime: ground.availableTime,
+                    amenities: ground.amenities,
+                    contactNumber: "", 
+                    groundType: "Indoor",
+                    sports: ground.sports,
                     images: ground.images,
                   }}
                   isEditing={true}

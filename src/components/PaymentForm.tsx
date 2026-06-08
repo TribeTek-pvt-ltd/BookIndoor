@@ -28,6 +28,7 @@ interface BookingResponse {
 interface PaymentFormProps {
   bookingDetails: BookingSummary;
   amount: number;
+  onPaymentSuccess?: () => void;
 }
 
 interface UserDetails {
@@ -61,6 +62,7 @@ export default function PaymentForm({ bookingDetails, amount }: PaymentFormProps
 
   const handlePayHerePayment = async (orderId: string, payAmount: number) => {
     try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const hashData: any = await api.post("/api/payhere/hash", {
         order_id: orderId,
         amount: payAmount,
@@ -133,7 +135,7 @@ export default function PaymentForm({ bookingDetails, amount }: PaymentFormProps
 
       const validation = BatchBookingSchema.safeParse(bookingPayload);
       if (!validation.success) {
-        alert(validation.error?.errors?.[0]?.message || "Please check all fields.");
+        alert(validation.error?.issues?.[0]?.message || "Please check all fields.");
         setLoading(false);
         return;
       }
@@ -144,9 +146,10 @@ export default function PaymentForm({ bookingDetails, amount }: PaymentFormProps
       } else {
         throw new Error("No payment group ID returned");
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Booking Error:", err);
-      alert(err.message || "Failed to create booking.");
+      const msg = err instanceof Error ? err.message : "Failed to create booking.";
+      alert(msg);
       setLoading(false);
     }
   };

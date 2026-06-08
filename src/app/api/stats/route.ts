@@ -75,9 +75,10 @@ export async function GET(req: Request) {
     const ownedGrounds = await Ground.find({ owner: decoded.id }).select("_id name").lean();
     const ownedIds = ownedGrounds.map(g => g._id);
 
-    let matchQuery: any = { ground: { $in: ownedIds } };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const matchQuery: any = { ground: { $in: ownedIds } };
     if (groundFilter) {
-      if (!ownedIds.some(id => id.toString() === groundFilter)) {
+      if (!ownedIds.some(id => String(id) === groundFilter)) {
         return NextResponse.json({ error: "Forbidden" }, { status: 403 });
       }
       matchQuery.ground = new mongoose.Types.ObjectId(groundFilter);
@@ -131,6 +132,7 @@ export async function GET(req: Request) {
     const periods = overallStats?.[0]?.periods?.[0] || { weekly: 0, weeklyIncome: 0, monthly: 0, monthlyIncome: 0, yearly: 0, yearlyIncome: 0 };
     const sportsMap: Record<string, number> = {};
     if (overallStats?.[0]?.sports) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       overallStats[0].sports.forEach((s: any) => sportsMap[s._id] = s.count);
     }
 

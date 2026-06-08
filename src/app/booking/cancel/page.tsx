@@ -10,6 +10,7 @@ function CancellationContent() {
     const id = searchParams.get("id");
 
     const [loading, setLoading] = useState(true);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const [bookingData, setBookingData] = useState<any>(null);
     const [error, setError] = useState<string | null>(null);
     const [cancelling, setCancelling] = useState(false);
@@ -109,6 +110,7 @@ function CancellationContent() {
         );
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const isCancelled = bookingData.bookings.some((b: any) => b.status === 'cancelled');
 
     return (
@@ -129,7 +131,7 @@ function CancellationContent() {
                             <div className="mb-8">
                                 <h2 className="text-lg font-semibold mb-4 text-gray-800 border-bottom pb-2">Booking Details</h2>
                                 <div className="space-y-4">
-                                    {bookingData.bookings.map((booking: any, idx: number) => (
+                                    {bookingData.bookings.map((booking: { date: string, timeSlots: { startTime: string }[] }, idx: number) => (
                                         <div key={idx} className="flex flex-col sm:flex-row sm:items-center gap-4 bg-gray-50 p-4 rounded-xl">
                                             <div className="flex items-center gap-3 text-gray-700">
                                                 <FaCalendarAlt className="text-green-600" />
@@ -137,7 +139,7 @@ function CancellationContent() {
                                             </div>
                                             <div className="flex items-center gap-3 text-gray-700">
                                                 <FaClock className="text-green-600" />
-                                                <span>{booking.timeSlots.map((ts: any) => ts.startTime).join(", ")}</span>
+                                                <span>{booking.timeSlots.map((ts) => ts.startTime).join(", ")}</span>
                                             </div>
                                         </div>
                                     ))}

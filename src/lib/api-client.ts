@@ -6,14 +6,17 @@ type HttpMethod = "GET" | "POST" | "PUT" | "DELETE" | "PATCH";
 
 interface RequestOptions extends RequestInit {
   method?: HttpMethod;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   body?: any;
   params?: Record<string, string>;
 }
 
 export class ApiError extends Error {
   status: number;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   data: any;
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   constructor(status: number, data: any) {
     super(data?.error || "API Request Failed");
     this.name = "ApiError";
@@ -70,9 +73,11 @@ export const api = {
   get: <T>(endpoint: string, options?: Omit<RequestOptions, "method" | "body">) =>
     apiClient<T>(endpoint, { ...options, method: "GET" }),
     
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   post: <T>(endpoint: string, body?: any, options?: Omit<RequestOptions, "method" | "body">) =>
     apiClient<T>(endpoint, { ...options, method: "POST", body }),
     
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   put: <T>(endpoint: string, body?: any, options?: Omit<RequestOptions, "method" | "body">) =>
     apiClient<T>(endpoint, { ...options, method: "PUT", body }),
     
