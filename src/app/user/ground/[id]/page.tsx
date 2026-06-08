@@ -144,11 +144,49 @@ export default function UserGroundDetails() {
     return <p className="text-center mt-10 text-red-500">Invalid ground ID</p>;
   if (loading)
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="relative">
-          <div className="w-16 h-16 rounded-full border-4 border-slate-100 border-t-emerald-600 animate-spin"></div>
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
-            <div className="w-2 h-2 bg-emerald-600 rounded-full animate-pulse"></div>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-10 space-y-8 sm:space-y-10 animate-pulse">
+        {/* Gallery & Info Section Skeletons */}
+        <div className="flex flex-col lg:flex-row gap-8 items-stretch">
+          {/* Gallery Block */}
+          <div className="w-full lg:w-3/5 h-[300px] sm:h-[400px] md:h-[500px] bg-slate-200 rounded-xl" />
+
+          {/* Info Block */}
+          <div className="w-full lg:w-2/5 p-6 sm:p-8 border border-slate-100 rounded-xl flex flex-col justify-center space-y-6">
+            <div className="w-24 h-6 bg-slate-200 rounded-xl" />
+            <div className="h-10 bg-slate-300 rounded-lg w-3/4" />
+            
+            <div className="space-y-4 pt-2">
+              <div className="flex gap-3 items-center">
+                <div className="w-6 h-6 bg-slate-200 rounded-full flex-shrink-0" />
+                <div className="h-4 bg-slate-200 rounded w-5/6" />
+              </div>
+              <div className="h-14 bg-slate-100 rounded-xl w-full" />
+            </div>
+
+            <div className="flex flex-wrap gap-2.5 pt-4">
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="w-24 h-8 bg-slate-100 rounded-xl" />
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Sports Selection Skeleton */}
+        <div className="p-6 sm:p-8 border border-slate-100 rounded-xl space-y-6">
+          <div className="space-y-2">
+            <div className="h-6 bg-slate-200 rounded w-48" />
+            <div className="h-4 bg-slate-150 rounded w-64" />
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="p-6 rounded-xl border border-slate-100 bg-white h-36 flex flex-col justify-between">
+                <div className="w-10 h-10 bg-slate-100 rounded-xl" />
+                <div className="space-y-2">
+                  <div className="h-4 bg-slate-200 rounded w-24" />
+                  <div className="h-3 bg-slate-150 rounded w-16" />
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </div>

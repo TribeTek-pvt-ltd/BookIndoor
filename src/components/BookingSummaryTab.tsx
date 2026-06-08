@@ -60,8 +60,54 @@ export default function BookingSummaryTab({ selectedSport, groundId }: BookingSu
   }, [groundId]);
 
   if (loading) return (
-    <div className="flex justify-center py-20">
-      <div className="w-12 h-12 border-4 border-emerald-500/30 border-t-emerald-500 rounded-full animate-spin"></div>
+    <div className="space-y-12 py-4 animate-pulse">
+      <div>
+        <div className="h-7 bg-slate-200 rounded w-48 mb-6 ml-2"></div>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 lg:gap-8">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="glass-card p-6 flex flex-col h-full space-y-6 border border-slate-100/50">
+              <div className="flex flex-col items-center text-center space-y-6 flex-1">
+                <div className="w-20 h-6 bg-slate-200 rounded-full"></div>
+                <div className="space-y-2 flex flex-col items-center">
+                  <div className="h-3 bg-slate-200 rounded w-24"></div>
+                  <div className="h-8 bg-slate-300 rounded w-36"></div>
+                </div>
+                <div className="w-full pt-4 border-t border-slate-100/50 flex flex-col items-center space-y-4">
+                  <div className="h-6 bg-slate-200 rounded w-28"></div>
+                  <div className="w-full space-y-2 mt-auto">
+                    {[1, 2].map((j) => (
+                      <div key={j} className="h-9 bg-slate-100 rounded-xl w-full"></div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+      
+      {!groundId && (
+        <div className="space-y-6 pt-8 border-t border-slate-100">
+          <div className="h-7 bg-slate-200 rounded w-64 mb-6 ml-2"></div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="flex items-center justify-between gap-4 bg-white p-5 rounded-2xl border border-slate-100 shadow-sm">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-slate-200 flex-shrink-0"></div>
+                  <div className="space-y-2">
+                    <div className="h-4 bg-slate-200 rounded w-28"></div>
+                    <div className="h-3 bg-slate-100 rounded w-20"></div>
+                  </div>
+                </div>
+                <div className="text-right space-y-2">
+                  <div className="h-4 bg-slate-200 rounded w-20 ml-auto"></div>
+                  <div className="h-2 bg-slate-100 rounded w-16 ml-auto"></div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 

@@ -52,9 +52,25 @@ export default function SuperAdminSummaryTab() {
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center py-20 animate-pulse">
-        <div className="w-12 h-12 border-4 border-emerald-600 border-t-transparent rounded-full animate-spin"></div>
-        <p className="mt-4 text-slate-400 font-bold uppercase tracking-widest text-[10px]">Aggregating Platform Data</p>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 animate-pulse">
+        {[1, 2, 3].map((i) => (
+          <div
+            key={i}
+            className="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm flex flex-col justify-between"
+          >
+            <div>
+              <div className="flex justify-between items-start mb-6">
+                <div className="w-12 h-12 bg-slate-100 rounded-2xl"></div>
+                <div className="w-16 h-5 bg-slate-100 rounded-md"></div>
+              </div>
+
+              <div className="h-4 bg-slate-200 rounded w-36 mb-2"></div>
+              <div className="h-3 bg-slate-100 rounded w-24 mb-6"></div>
+            </div>
+
+            <div className="h-8 bg-slate-300 rounded w-28 mt-4"></div>
+          </div>
+        ))}
       </div>
     );
   }

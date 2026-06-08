@@ -129,12 +129,19 @@ export async function GET(req: Request) {
         } else query.ground = { $in: ownedIds };
       } else if (groundId) query.ground = groundId;
 
+      const page = parseInt(url.searchParams.get("page") || "1", 10);
+      const limit = parseInt(url.searchParams.get("limit") || "10", 10);
+      const skip = (page - 1) * limit;
+
+      const total = await Booking.countDocuments(query);
       const bookings = await Booking.find(query)
         .populate("ground", "name")
         .sort({ date: -1, createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
         .lean();
 
-      return NextResponse.json(bookings);
+      return NextResponse.json({ bookings, total, page, limit });
     }
 
     if (!groundId || !date) return NextResponse.json({ error: "Missing parameters" }, { status: 400 });

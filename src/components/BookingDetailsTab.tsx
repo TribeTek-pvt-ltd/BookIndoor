@@ -39,12 +39,25 @@ export default function BookingDetailsTab({ selectedSport, groundId }: BookingDe
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
+  
+  // Pagination State
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalRecords, setTotalRecords] = useState(0);
+  const limit = 10;
 
   const fetchBookings = useCallback(async () => {
     try {
       setLoading(true);
-      const data: APIBooking[] = await api.get("/api/booking", { params: { ground: groundId || "" } });
-      const mapped: Booking[] = data.map((b) => ({
+      const res: { bookings: APIBooking[]; total: number; page: number; limit: number } = 
+        await api.get("/api/booking", { 
+          params: { 
+            ground: groundId || "",
+            page: String(currentPage),
+            limit: String(limit)
+          } 
+        });
+
+      const mapped: Booking[] = res.bookings.map((b) => ({
         id: b._id,
         name: b.guest?.name || "Member",
         phone: b.guest?.phone || "N/A",
@@ -58,16 +71,22 @@ export default function BookingDetailsTab({ selectedSport, groundId }: BookingDe
         groundName: b.ground?.name || "Unknown"
       }));
       setBookings(mapped);
+      setTotalRecords(res.total);
     } catch (err) {
       console.error("Error fetching bookings:", err);
     } finally {
       setLoading(false);
     }
-  }, [groundId]);
+  }, [groundId, currentPage]);
 
   useEffect(() => {
     fetchBookings();
   }, [fetchBookings]);
+
+  // Reset page when groundId or selectedSport changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [groundId, selectedSport]);
 
   const filteredBookings = useMemo(() => 
     selectedSport ? bookings.filter((b) => b.sport === selectedSport) : bookings
@@ -105,6 +124,55 @@ export default function BookingDetailsTab({ selectedSport, groundId }: BookingDe
       alert("Failed to confirm booking");
     }
   };
+
+  const renderTableSkeleton = () => (
+    <div className="overflow-x-auto animate-pulse">
+      <table className="w-full text-left border-collapse min-w-[800px]">
+        <thead>
+          <tr className="bg-slate-50 border-b border-slate-100">
+            <th className="p-4"><div className="h-4 bg-slate-200 rounded w-24"></div></th>
+            <th className="p-4"><div className="h-4 bg-slate-200 rounded w-28"></div></th>
+            <th className="p-4"><div className="h-4 bg-slate-200 rounded w-20"></div></th>
+            <th className="p-4"><div className="h-4 bg-slate-200 rounded w-16"></div></th>
+            <th className="p-4 text-right"><div className="h-4 bg-slate-200 rounded w-16 ml-auto"></div></th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-slate-50">
+          {[1, 2, 3, 4, 5].map((i) => (
+            <tr key={i} className="border-b border-slate-50">
+              <td className="p-4">
+                <div className="h-5 bg-slate-200 rounded w-32 mb-2"></div>
+                <div className="h-3 bg-slate-100 rounded w-20"></div>
+              </td>
+              <td className="p-4">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-lg bg-slate-100 flex-shrink-0"></div>
+                  <div className="space-y-2 flex-1">
+                    <div className="h-4 bg-slate-200 rounded w-24"></div>
+                    <div className="h-3 bg-slate-100 rounded w-16"></div>
+                  </div>
+                </div>
+              </td>
+              <td className="p-4">
+                <div className="h-4 bg-slate-100 rounded w-12 mb-1"></div>
+                <div className="h-3 bg-slate-100 rounded w-16"></div>
+              </td>
+              <td className="p-4">
+                <div className="h-6 bg-slate-200 rounded-full w-20 mb-1"></div>
+                <div className="h-5 bg-slate-100 rounded-md w-16"></div>
+              </td>
+              <td className="p-4 text-right">
+                <div className="flex items-center justify-end gap-2">
+                  <div className="w-9 h-9 rounded-lg bg-slate-100"></div>
+                  <div className="w-9 h-9 rounded-lg bg-slate-100"></div>
+                </div>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
 
   const renderBookingsTable = (items: Booking[]) => (
     <div className="overflow-x-auto">
@@ -172,12 +240,37 @@ export default function BookingDetailsTab({ selectedSport, groundId }: BookingDe
     </div>
   );
 
-  if (loading) return <div className="flex justify-center items-center py-20"><div className="w-10 h-10 border-4 border-emerald-600 border-t-transparent rounded-full animate-spin"></div></div>;
+  if (loading) {
+    return (
+      <div className="space-y-12">
+        {groundId ? (
+          <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
+            {renderTableSkeleton()}
+          </div>
+        ) : (
+          [1, 2].map((i) => (
+            <div key={i} className="space-y-4">
+              <div className="flex items-center gap-4 px-2">
+                <div className="h-6 bg-slate-200 rounded w-36 animate-pulse"></div>
+                <div className="h-px flex-1 bg-slate-100"></div>
+                <div className="h-4 bg-slate-200 rounded w-24 animate-pulse"></div>
+              </div>
+              <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
+                {renderTableSkeleton()}
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+    );
+  }
 
   if (filteredBookings.length === 0) return <div className="text-center py-20 bg-slate-50 rounded-3xl border-2 border-dashed border-slate-200"><p className="text-slate-500 font-medium text-lg">No bookings found for the selected criteria.</p></div>;
 
+  const totalPages = Math.ceil(totalRecords / limit);
+
   return (
-    <div className="space-y-12">
+    <div className="space-y-8">
       {groupedBookings ? Object.entries(groupedBookings).map(([gn, items]) => (
         <div key={gn} className="space-y-4">
           <div className="flex items-center gap-4 px-2">
@@ -188,6 +281,49 @@ export default function BookingDetailsTab({ selectedSport, groundId }: BookingDe
           <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">{renderBookingsTable(items)}</div>
         </div>
       )) : <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">{renderBookingsTable(filteredBookings)}</div>}
+
+      {/* Pagination Controls */}
+      {totalPages > 1 && (
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-6 border-t border-slate-100">
+          <p className="text-sm font-semibold text-slate-500">
+            Showing <span className="font-bold text-slate-800">{(currentPage - 1) * limit + 1}</span> to{" "}
+            <span className="font-bold text-slate-800">{Math.min(currentPage * limit, totalRecords)}</span> of{" "}
+            <span className="font-bold text-slate-800">{totalRecords}</span> bookings
+          </p>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+              disabled={currentPage === 1}
+              className="px-4 py-2 border border-slate-200 rounded-xl text-sm font-bold text-slate-600 bg-white hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+            >
+              Previous
+            </button>
+            {Array.from({ length: totalPages }).map((_, idx) => {
+              const pageNumber = idx + 1;
+              return (
+                <button
+                  key={pageNumber}
+                  onClick={() => setCurrentPage(pageNumber)}
+                  className={`w-9 h-9 flex items-center justify-center rounded-xl text-sm font-bold transition-all ${
+                    currentPage === pageNumber
+                      ? "bg-emerald-600 text-white shadow-lg shadow-emerald-500/20 animate-none"
+                      : "border border-slate-200 text-slate-600 bg-white hover:bg-slate-50"
+                  }`}
+                >
+                  {pageNumber}
+                </button>
+              );
+            })}
+            <button
+              onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+              disabled={currentPage === totalPages}
+              className="px-4 py-2 border border-slate-200 rounded-xl text-sm font-bold text-slate-600 bg-white hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+            >
+              Next
+            </button>
+          </div>
+        </div>
+      )}
 
       {selectedBooking && (
         <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
