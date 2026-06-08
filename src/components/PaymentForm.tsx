@@ -52,6 +52,12 @@ export default function PaymentForm({ bookingDetails, amount }: PaymentFormProps
 
   const [isAdvance, setIsAdvance] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [idempotencyKey] = useState(() => {
+    if (typeof window !== "undefined" && window.crypto && window.crypto.randomUUID) {
+      return window.crypto.randomUUID();
+    }
+    return Math.random().toString(36).substring(2) + Date.now().toString(36);
+  });
 
   const handleUserChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -131,6 +137,7 @@ export default function PaymentForm({ bookingDetails, amount }: PaymentFormProps
           timeSlots: b.times.map((t) => ({ startTime: t?.split("-")?.[0] || t })),
         })),
         paymentStatus: "pending" as const,
+        idempotencyKey,
       };
 
       const validation = BatchBookingSchema.safeParse(bookingPayload);

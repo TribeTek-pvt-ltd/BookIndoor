@@ -22,6 +22,7 @@ export interface IBooking extends Document {
   payherePaymentId?: string; // ✅ Track PayHere transaction ID
   paidAmount?: number; // ✅ Track actual amount paid
   totalAmount: number;
+  idempotencyKey?: string;
   createdAt: Date;
 }
 
@@ -59,6 +60,7 @@ const BookingSchema = new Schema<IBooking>(
     payherePaymentId: { type: String }, // ✅ Track PayHere transaction ID
     paidAmount: { type: Number }, // ✅ Track actual amount paid
     totalAmount: { type: Number, required: true },
+    idempotencyKey: { type: String, unique: true, sparse: true },
   },
   { timestamps: true }
 );

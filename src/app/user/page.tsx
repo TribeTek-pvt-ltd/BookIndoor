@@ -34,6 +34,20 @@ export default function UserPage() {
   });
 
   useEffect(() => {
+    // Try to load from localStorage cache first
+    try {
+      const cached = localStorage.getItem("bookindoor_cached_grounds");
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setGrounds(parsed);
+          setLoading(false);
+        }
+      }
+    } catch (e) {
+      console.warn("Failed to load grounds cache:", e);
+    }
+
     const fetchGrounds = async () => {
       try {
         const response = await fetch("/api/grounds");
@@ -55,6 +69,13 @@ export default function UserPage() {
         }));
 
         setGrounds(mappedGrounds);
+        
+        // Save back to localStorage cache
+        try {
+          localStorage.setItem("bookindoor_cached_grounds", JSON.stringify(mappedGrounds));
+        } catch (e) {
+          console.warn("Failed to save grounds cache:", e);
+        }
       } catch (err) {
         console.error("❌ Error fetching grounds:", err);
       } finally {

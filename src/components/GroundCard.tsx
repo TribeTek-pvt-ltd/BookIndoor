@@ -26,7 +26,7 @@ export default function GroundCard({ ground, role = "user", onClick }: GroundCar
 
   return (
     <div
-      className="bg-white rounded-[2rem] overflow-hidden w-full max-w-[420px] flex flex-col group h-full relative shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 transition-all duration-500 hover:-translate-y-2 hover:shadow-[0_20px_40px_-15px_rgba(16,185,129,0.3)] perspective-1000"
+      className="bg-white rounded-[2rem] overflow-hidden w-full max-w-[420px] flex flex-col group h-full relative shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 transition-all duration-500 perspective-1000"
     >
       {/* Image Container with 3D Image Hover */}
       <div className="relative w-full h-56 sm:h-64 overflow-hidden rounded-t-[2rem]">
@@ -34,11 +34,11 @@ export default function GroundCard({ ground, role = "user", onClick }: GroundCar
           src={ground.image}
           alt={ground.name}
           fill
-          className="object-cover transition-transform duration-1000 group-hover:scale-110"
+          className="object-cover transition-transform duration-1000"
           sizes="(max-width: 768px) 100vw, 420px"
           priority
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/20 to-transparent opacity-60 group-hover:opacity-80 transition-opacity duration-500" />
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/20 to-transparent opacity-60 transition-opacity duration-500" />
         
         {/* Floating Verified Badge */}
         <div className="absolute top-4 right-4 bg-white/20 backdrop-blur-md rounded-full px-3 py-1 flex items-center gap-1.5 border border-white/30 shadow-lg z-10">
@@ -68,7 +68,7 @@ export default function GroundCard({ ground, role = "user", onClick }: GroundCar
       {/* Content Area */}
       <div className="p-6 flex-1 flex flex-col bg-white relative z-10">
         
-        <h3 className="text-2xl font-black text-slate-900 font-outfit mb-4 truncate group-hover:text-emerald-600 transition-colors">
+        <h3 className="text-2xl font-black text-slate-900 font-outfit mb-4 truncate transition-colors">
           {ground.name}
         </h3>
 

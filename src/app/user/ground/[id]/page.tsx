@@ -203,7 +203,7 @@ export default function UserGroundDetails() {
       prev === ground.images.length - 1 ? 0 : prev + 1
     );
 
-  const glassCardClasses = "glass-card p-6 sm:p-8";
+  const glassCardClasses = "glass-card-no-hover p-6 sm:p-8";
 
   const calculateAmount = (bookings: BookingItem[]) => {
     if (!selectedSport || !ground) return 0;

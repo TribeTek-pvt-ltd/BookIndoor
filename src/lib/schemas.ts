@@ -81,6 +81,7 @@ export const BatchBookingSchema = z.object({
     timeSlots: z.array(TimeSlotSchema).min(1),
   })).min(1),
   paymentStatus: z.enum(["pending", "advanced_paid", "full_paid"]).default("pending"),
+  idempotencyKey: z.string().optional(),
 });
 
 export type BatchBookingInput = z.infer<typeof BatchBookingSchema>;

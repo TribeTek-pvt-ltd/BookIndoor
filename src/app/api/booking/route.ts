@@ -41,6 +41,23 @@ export async function POST(req: Request) {
     }
     const data = validation.data;
 
+    // Check for existing booking with the same idempotency key to prevent duplicates
+    if (data.idempotencyKey) {
+      const existingBookings = await Booking.find({ 
+        idempotencyKey: { $regex: `^${data.idempotencyKey}_` } 
+      }).lean();
+      
+      if (existingBookings.length > 0) {
+        const grandTotal = existingBookings.reduce((sum, b) => sum + (b.totalAmount || 0), 0);
+        return NextResponse.json({
+          success: true,
+          bookingIds: existingBookings.map(b => String(b._id)),
+          paymentGroupId: existingBookings[0].paymentGroupId,
+          amount: grandTotal
+        });
+      }
+    }
+
     // Authenticate
     const authHeader = req.headers.get("Authorization");
     let userId = null;
@@ -76,6 +93,7 @@ export async function POST(req: Request) {
     const createdBookings = [];
     let grandTotal = 0;
 
+    let idx = 0;
     for (const item of data.bookings) {
       const totalAmount = item.timeSlots.length * pricePerSlot;
       grandTotal += totalAmount;
@@ -91,8 +109,10 @@ export async function POST(req: Request) {
         paymentStatus: data.paymentStatus,
         paymentGroupId,
         status: "reserved",
+        idempotencyKey: data.idempotencyKey ? `${data.idempotencyKey}_${idx}` : undefined,
       });
       createdBookings.push(booking._id);
+      idx++;
     }
 
     return NextResponse.json({ success: true, bookingIds: createdBookings, paymentGroupId, amount: grandTotal });
